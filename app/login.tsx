@@ -5,11 +5,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
+import { useThemeMode } from '@/contexts/theme-context';
 import { Brand } from '@/constants/theme';
 
 export default function LoginScreen() {
   const { token, signIn, isLoading, error } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -38,28 +42,28 @@ export default function LoginScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.wrapper}>
-      <ThemedView style={styles.container}>
+      <ThemedView style={[styles.container, { backgroundColor: palette.background }]}>
         <View style={styles.glowOne} />
         <View style={styles.glowTwo} />
 
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <View style={styles.logoIcon}>
+            <View style={[styles.logoIcon, { backgroundColor: Brand.gold }]}>
               <MaterialCommunityIcons name="content-cut" size={32} color="#000" />
             </View>
           </View>
           
-          <ThemedText type="title" style={styles.title}>
+          <ThemedText type="title" style={[styles.title, { color: palette.text }]}>
             BIENVENIDO <ThemedText type="title" style={styles.goldText}>DE NUEVO</ThemedText>
           </ThemedText>
           
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
             Premium Grooming Studio
           </ThemedText>
         </View>
 
-        <View style={styles.formCard}>
-          <ThemedText style={styles.sectionDescription}>
+        <View style={[styles.formCard, { borderColor: palette.border, backgroundColor: palette.card, shadowColor: resolvedMode === 'dark' ? '#000' : palette.border }]}>
+          <ThemedText style={[styles.sectionDescription, { color: palette.muted }]}>
             Introduce tus credenciales para continuar
           </ThemedText>
 
@@ -67,7 +71,7 @@ export default function LoginScreen() {
           <View style={styles.field}>
             <View style={styles.labelRow}>
               <MaterialCommunityIcons name="email-outline" size={14} color="rgba(212,175,55,0.5)" />
-              <ThemedText style={styles.label}>Correo electrónico</ThemedText>
+              <ThemedText style={[styles.label, { color: palette.muted }]}>Correo electrónico</ThemedText>
             </View>
             <TextInput
               autoCapitalize="none"
@@ -77,7 +81,7 @@ export default function LoginScreen() {
               placeholderTextColor="#7f7f7f"
               value={email}
               onChangeText={setEmail}
-              style={styles.input}
+              style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
             />
           </View>
 
@@ -85,7 +89,7 @@ export default function LoginScreen() {
           <View style={styles.field}>
             <View style={styles.labelRow}>
               <MaterialCommunityIcons name="lock-outline" size={14} color="rgba(212,175,55,0.5)" />
-              <ThemedText style={styles.label}>Contraseña</ThemedText>
+              <ThemedText style={[styles.label, { color: palette.muted }]}>Contraseña</ThemedText>
             </View>
             <TextInput
               autoCapitalize="none"
@@ -95,7 +99,7 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               onSubmitEditing={handleLogin}
-              style={styles.input}
+              style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
             />
           </View>
 
@@ -107,21 +111,21 @@ export default function LoginScreen() {
 
           {/* Divider */}
           <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <ThemedText style={styles.dividerText}>o</ThemedText>
-            <View style={styles.dividerLine} />
+            <View style={[styles.dividerLine, { backgroundColor: palette.border }]} />
+            <ThemedText style={[styles.dividerText, { color: palette.muted }]}>o</ThemedText>
+            <View style={[styles.dividerLine, { backgroundColor: palette.border }]} />
           </View>
 
           {/* Register Link */}
           <Pressable onPress={() => router.push('/registro')} style={styles.registerLink}>
-            <ThemedText style={styles.registerLinkText}>
+            <ThemedText style={[styles.registerLinkText, { color: palette.muted }]}>
               ¿Aún no tienes cuenta? <ThemedText style={styles.registerLinkHighlight}>Regístrate ahora</ThemedText>
             </ThemedText>
           </Pressable>
 
           {/* Volver al inicio */}
           <Pressable onPress={() => router.replace('/landing')} style={styles.backLink}>
-            <ThemedText style={styles.backLinkText}>← Volver al inicio</ThemedText>
+            <ThemedText style={[styles.backLinkText, { color: palette.muted }]}>← Volver al inicio</ThemedText>
           </Pressable>
         </View>
       </ThemedView>
@@ -158,8 +162,8 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 999,
-    backgroundColor: 'rgba(17,24,39,0.8)',
-    shadowColor: '#111827',
+    backgroundColor: 'rgba(212,175,55,0.08)',
+    shadowColor: Brand.gold,
     shadowOpacity: 0.35,
     shadowRadius: 26,
     shadowOffset: { width: 0, height: 0 },
@@ -183,7 +187,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 32,
     fontWeight: '900',
-    color: '#fff',
     textAlign: 'center',
   },
   goldText: {
@@ -194,7 +197,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 8,
-    color: Brand.muted,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -204,18 +206,10 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.45,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
     gap: 20,
   },
   sectionDescription: {
-    color: Brand.muted,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -232,7 +226,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   label: {
-    color: Brand.muted,
     fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -241,9 +234,6 @@ const styles = StyleSheet.create({
   input: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    color: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 14,
@@ -285,10 +275,8 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Brand.line,
   },
   dividerText: {
-    color: Brand.muted,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -297,7 +285,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   registerLinkText: {
-    color: Brand.muted,
     fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -312,7 +299,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   backLinkText: {
-    color: Brand.muted,
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',

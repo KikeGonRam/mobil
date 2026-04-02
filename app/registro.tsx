@@ -5,8 +5,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
+import { useThemeMode } from '@/contexts/theme-context';
 
 type RegisterForm = {
   name: string;
@@ -16,6 +17,8 @@ type RegisterForm = {
 };
 
 export default function RegisterScreen() {
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
   const [form, setForm] = useState<RegisterForm>({
     name: '',
     email: '',
@@ -100,28 +103,28 @@ export default function RegisterScreen() {
   }
 
   return (
-    <ThemedView style={styles.wrapper}>
+    <ThemedView style={[styles.wrapper, { backgroundColor: palette.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <View style={styles.badge}>
+            <View style={[styles.badge, { borderColor: 'rgba(212,175,55,0.3)', backgroundColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.08)' : 'rgba(212,175,55,0.16)' }]}>
               <ThemedText style={styles.badgeText}>
                 Únete a la élite
               </ThemedText>
             </View>
             
-            <ThemedText type="title" style={styles.title}>
+            <ThemedText type="title" style={[styles.title, { color: palette.text }]}>
               CREA TU <ThemedText type="title" style={styles.goldText}>CUENTA</ThemedText>
             </ThemedText>
             
-            <ThemedText style={styles.subtitle}>
+            <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
               Gestiona tus citas premium y accede a beneficios exclusivos
             </ThemedText>
           </View>
 
-          <View style={styles.formCard}>
+          <View style={[styles.formCard, { borderColor: palette.border, backgroundColor: palette.card, shadowColor: resolvedMode === 'dark' ? '#000' : palette.border }]}>
             {errors.general && (
               <View style={styles.errorBanner}>
                 <ThemedText style={styles.errorText}>{errors.general}</ThemedText>
@@ -132,7 +135,7 @@ export default function RegisterScreen() {
             <View style={styles.field}>
               <View style={styles.labelRow}>
                 <MaterialCommunityIcons name="account-outline" size={14} color="rgba(212,175,55,0.5)" />
-                <ThemedText style={styles.label}>Nombre completo</ThemedText>
+                <ThemedText style={[styles.label, { color: palette.muted }]}>Nombre completo</ThemedText>
               </View>
               <TextInput
                 autoCapitalize="words"
@@ -144,7 +147,7 @@ export default function RegisterScreen() {
                   setForm((prev) => ({ ...prev, name: value }));
                   if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
                 }}
-                style={[styles.input, errors.name && styles.inputError]}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }, errors.name && styles.inputError]}
               />
               {errors.name && <ThemedText style={styles.fieldError}>{errors.name}</ThemedText>}
             </View>
@@ -153,7 +156,7 @@ export default function RegisterScreen() {
             <View style={styles.field}>
               <View style={styles.labelRow}>
                 <MaterialCommunityIcons name="email-outline" size={14} color="rgba(212,175,55,0.5)" />
-                <ThemedText style={styles.label}>Correo electrónico</ThemedText>
+                <ThemedText style={[styles.label, { color: palette.muted }]}>Correo electrónico</ThemedText>
               </View>
               <TextInput
                 autoCapitalize="none"
@@ -166,7 +169,7 @@ export default function RegisterScreen() {
                   setForm((prev) => ({ ...prev, email: value }));
                   if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
                 }}
-                style={[styles.input, errors.email && styles.inputError]}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }, errors.email && styles.inputError]}
               />
               {errors.email && <ThemedText style={styles.fieldError}>{errors.email}</ThemedText>}
             </View>
@@ -175,7 +178,7 @@ export default function RegisterScreen() {
             <View style={styles.field}>
               <View style={styles.labelRow}>
                 <MaterialCommunityIcons name="lock-outline" size={14} color="rgba(212,175,55,0.5)" />
-                <ThemedText style={styles.label}>Contraseña</ThemedText>
+                <ThemedText style={[styles.label, { color: palette.muted }]}>Contraseña</ThemedText>
               </View>
               <TextInput
                 autoCapitalize="none"
@@ -187,7 +190,7 @@ export default function RegisterScreen() {
                   setForm((prev) => ({ ...prev, password: value }));
                   if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
                 }}
-                style={[styles.input, errors.password && styles.inputError]}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }, errors.password && styles.inputError]}
               />
               {errors.password && <ThemedText style={styles.fieldError}>{errors.password}</ThemedText>}
             </View>
@@ -196,7 +199,7 @@ export default function RegisterScreen() {
             <View style={styles.field}>
               <View style={styles.labelRow}>
                 <MaterialCommunityIcons name="lock-check-outline" size={14} color="rgba(212,175,55,0.5)" />
-                <ThemedText style={styles.label}>Confirmar contraseña</ThemedText>
+                <ThemedText style={[styles.label, { color: palette.muted }]}>Confirmar contraseña</ThemedText>
               </View>
               <TextInput
                 autoCapitalize="none"
@@ -208,7 +211,7 @@ export default function RegisterScreen() {
                   setForm((prev) => ({ ...prev, password_confirmation: value }));
                   if (errors.password_confirmation) setErrors((prev) => ({ ...prev, password_confirmation: '' }));
                 }}
-                style={[styles.input, errors.password_confirmation && styles.inputError]}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }, errors.password_confirmation && styles.inputError]}
               />
               {errors.password_confirmation && <ThemedText style={styles.fieldError}>{errors.password_confirmation}</ThemedText>}
             </View>
@@ -229,22 +232,22 @@ export default function RegisterScreen() {
 
             {/* Divider */}
             <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <ThemedText style={styles.dividerText}>o</ThemedText>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: palette.border }]} />
+              <ThemedText style={[styles.dividerText, { color: palette.muted }]}>o</ThemedText>
+              <View style={[styles.dividerLine, { backgroundColor: palette.border }]} />
             </View>
 
             {/* Login Link */}
             <Pressable onPress={() => router.push('/login')} style={styles.loginLink}>
-              <ThemedText style={styles.loginLinkText}>
+              <ThemedText style={[styles.loginLinkText, { color: palette.muted }]}>
                 ¿Ya tienes cuenta? <ThemedText style={styles.loginLinkHighlight}>Inicia sesión aquí</ThemedText>
               </ThemedText>
             </Pressable>
           </View>
 
           {/* Beneficios */}
-          <View style={styles.benefits}>
-            <ThemedText type="subtitle" style={styles.benefitsTitle}>
+          <View style={[styles.benefits, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText type="subtitle" style={[styles.benefitsTitle, { color: palette.text }]}>
               Beneficios Exclusivos
             </ThemedText>
 
@@ -258,7 +261,7 @@ export default function RegisterScreen() {
                 <View style={styles.benefitIcon}>
                   <MaterialCommunityIcons name={benefit.icon as any} size={14} color={Brand.gold} />
                 </View>
-                <ThemedText style={styles.benefitText}>{benefit.text}</ThemedText>
+                <ThemedText style={[styles.benefitText, { color: palette.text }]}>{benefit.text}</ThemedText>
               </View>
             ))}
           </View>
