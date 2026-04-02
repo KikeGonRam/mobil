@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useCopilot } from 'react-native-copilot';
 
 const TOUR_STORAGE_KEY = 'urbanblade.tour.completed';
 
@@ -32,7 +31,6 @@ export function useTour(): TourConfig {
   const [isTourActive, setIsTourActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const hasCheckedStorage = useRef(false);
-  const { start, stop } = useCopilot();
 
   // Cargar el estado del tour desde AsyncStorage
   useEffect(() => {
@@ -54,8 +52,7 @@ export function useTour(): TourConfig {
   const startTour = useCallback(() => {
     setIsTourActive(true);
     setCurrentStep(0);
-    start();
-  }, [start]);
+  }, []);
 
   const markTourComplete = useCallback(async () => {
     try {

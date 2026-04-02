@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { CopilotStep, CopilotText, useCopilot } from 'react-native-copilot';
+import { CopilotStep, useCopilot } from 'react-native-copilot';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -28,9 +28,10 @@ export default function HomeScreen() {
   const { token, user, signOut } = useAuth();
   const { resolvedMode } = useThemeMode();
   const { isSmallPhone, isTablet, wp, spacing, fontScale } = useResponsive();
-  const { canShowTour, markTourComplete } = useTour();
-  const { start: startTour, stop: stopTour } = useCopilot();
+  const { canShowTour } = useTour();
+  const { start: startTour } = useCopilot();
   const palette = Colors[resolvedMode];
+  const tourEnabled = Platform.OS !== 'web';
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const hasStartedTour = useRef(false);
@@ -60,6 +61,10 @@ export default function HomeScreen() {
   // Iniciar tour en la primera carga si es la primera vez
   useFocusEffect(
     useCallback(() => {
+      if (!tourEnabled) {
+        return;
+      }
+
       if (canShowTour() && !hasStartedTour.current && !loading && dashboard) {
         hasStartedTour.current = true;
         const timer = setTimeout(() => {
@@ -68,7 +73,7 @@ export default function HomeScreen() {
         return () => clearTimeout(timer);
       }
       return;
-    }, [canShowTour, loading, dashboard, startTour])
+    }, [tourEnabled, canShowTour, loading, dashboard, startTour])
   );
 
   const kpis = dashboard?.data.kpis ?? {};
@@ -78,12 +83,13 @@ export default function HomeScreen() {
   return (
     <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <ScrollView contentContainerStyle={[styles.content, { gap: spacing(16), padding: contentPadding }]} showsVerticalScrollIndicator={false}>
-        <CopilotStep
-          text={<CopilotText>Bienvenido a tu panel de control. Aquí verás toda la información de tu barbería.</CopilotText>}
+        <MaybeCopilotStep
+          enabled={tourEnabled}
+          text="Bienvenido a tu panel de control. Aquí verás toda la información de tu barbería."
           order={1}
           name="step-header"
         >
-          <View ref={heroRef} style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <View ref={heroRef} style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}> 
             <ThemedText type="title" style={[styles.brand, { color: palette.text, fontSize: fontScale(32) }]}>
               BARBER <ThemedText type="title" style={styles.goldText}>PRO</ThemedText>
             </ThemedText>
@@ -101,7 +107,7 @@ export default function HomeScreen() {
               </ThemedText>
             </View>
           </View>
-        </CopilotStep>
+        </MaybeCopilotStep>
 
         <View style={[styles.userBar, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <View style={styles.userInfo}>
@@ -126,12 +132,13 @@ export default function HomeScreen() {
             <ThemedText style={[styles.loaderText, { color: palette.muted, fontSize: fontScale(12) }]}>Sincronizando con el estudio...</ThemedText>
           </View>
         ) : (
-          <CopilotStep
-            text={<CopilotText>Aquí ves tus métricas en tiempo real: citas, ingresos, clientes y calificación.</CopilotText>}
+          <MaybeCopilotStep
+            enabled={tourEnabled}
+            text="Aquí ves tus métricas en tiempo real: citas, ingresos, clientes y calificación."
             order={2}
             name="step-kpis"
           >
-            <View ref={kpisRef} style={[styles.grid, { gap: spacing(12) }]}>
+            <View ref={kpisRef} style={[styles.grid, { gap: spacing(12) }]}> 
               {[1, 2, 3, 4].map((i) => {
                 const metricWidth = (100 / gridColumns) - (12 * (gridColumns - 1) / gridColumns);
                 const metrics = [
@@ -178,15 +185,16 @@ export default function HomeScreen() {
                 );
               })}
             </View>
-          </CopilotStep>
+          </MaybeCopilotStep>
         )}
 
-        <CopilotStep
-          text={<CopilotText>Aquí están tus próximas citas. Haz clic para actualizar la información.</CopilotText>}
+        <MaybeCopilotStep
+          enabled={tourEnabled}
+          text="Aquí están tus próximas citas. Haz clic para actualizar la información."
           order={3}
           name="step-appointments"
         >
-          <View ref={appointmentsRef} style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card, padding: contentPadding }]}>
+          <View ref={appointmentsRef} style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card, padding: contentPadding }]}> 
             <View style={styles.sectionHeader}>
               <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text, fontSize: fontScale(14) }]}>
                 Próximas citas
@@ -211,9 +219,29 @@ export default function HomeScreen() {
               <ThemedText style={[styles.emptyState, { fontSize: fontScale(13) }]}>No hay citas próximas cargadas en este perfil.</ThemedText>
             )}
           </View>
-        </CopilotStep>
+        </MaybeCopilotStep>
       </ScrollView>
     </ThemedView>
+  );
+}
+
+type MaybeCopilotStepProps = {
+  enabled: boolean;
+  text: string;
+  order: number;
+  name: string;
+  children: React.ReactElement;
+};
+
+function MaybeCopilotStep({ enabled, text, order, name, children }: MaybeCopilotStepProps) {
+  if (!enabled) {
+    return children;
+  }
+
+  return (
+    <CopilotStep text={text} order={order} name={name}>
+      {children}
+    </CopilotStep>
   );
 }
 
