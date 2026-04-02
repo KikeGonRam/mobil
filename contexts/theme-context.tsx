@@ -1,5 +1,5 @@
-import { Appearance, useColorScheme as useNativeColorScheme } from 'react-native';
-import { createContext, useContext, useMemo, useEffect, useState, type PropsWithChildren } from 'react';
+import { useColorScheme as useNativeColorScheme } from 'react-native';
+import { createContext, useContext, useMemo, useEffect, useRef, useState, type PropsWithChildren } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
@@ -18,14 +18,16 @@ const THEME_STORAGE_KEY = 'urbanblade.theme.mode';
 export function ThemeModeProvider({ children }: PropsWithChildren) {
   const [mode, setInternalMode] = useState<ThemeMode>('system');
   const systemColorScheme = useNativeColorScheme();
+  const hasHydrated = useRef(false);
 
   // Cargar el tema inicial desde el almacenamiento
   useEffect(() => {
     void (async () => {
       const saved = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-      if (saved) {
+      if (saved && !hasHydrated.current) {
         setInternalMode(JSON.parse(saved) as ThemeMode);
       }
+      hasHydrated.current = true;
     })();
   }, []);
 
@@ -47,11 +49,10 @@ export function ThemeModeProvider({ children }: PropsWithChildren) {
       resolvedMode,
       setMode,
       cycleMode: () => {
-        const next: ThemeMode = mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system';
-        setMode(next);
+        setMode(resolvedMode === 'dark' ? 'light' : 'dark');
       },
     }),
-    [mode, resolvedMode]
+    [mode, resolvedMode, setMode]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

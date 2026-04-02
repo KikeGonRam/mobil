@@ -88,7 +88,7 @@ export default function LandingScreen() {
                   en cada detalle
                 </ThemedText>
                 
-                <ThemedText style={styles.heroCopy}>
+                <ThemedText style={[styles.heroCopy, { color: palette.text }]}>
                   Elevamos el concepto de barbería a un estudio de arte. Un espacio diseñado para el hombre que exige perfección.
                 </ThemedText>
               </View>
@@ -113,13 +113,13 @@ export default function LandingScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInUp.duration(800).delay(400)} style={[styles.section, { borderColor: palette.border, backgroundColor: palette.card }]}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
+          <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
             Servicios destacados
           </ThemedText>
           {loading ? (
             <View style={styles.loader}>
               <ActivityIndicator color={Brand.gold} />
-              <ThemedText style={styles.loaderText}>Cargando experiencia...</ThemedText>
+              <ThemedText style={[styles.loaderText, { color: palette.muted }]}>Cargando experiencia...</ThemedText>
             </View>
           ) : (
             services.map((service, i) => (
@@ -130,7 +130,7 @@ export default function LandingScreen() {
                   </ThemedText>
                   <ThemedText style={styles.cardPrice}>${Number(service.precio ?? 0).toFixed(0)}</ThemedText>
                 </View>
-                <ThemedText style={styles.cardMeta}>
+                <ThemedText style={[styles.cardMeta, { color: palette.muted }]}>
                   {service.categoria ?? 'General'} · {service.duracion_min ?? 0} min
                 </ThemedText>
               </Animated.View>
@@ -142,7 +142,7 @@ export default function LandingScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInUp.duration(800).delay(600)} style={[styles.section, { borderColor: palette.border, backgroundColor: palette.card }]}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
+          <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
             Nuestros Maestros
           </ThemedText>
           {loading ? (
@@ -156,8 +156,8 @@ export default function LandingScreen() {
                   <View style={[styles.avatar, { borderColor: 'rgba(212,175,55,0.3)', backgroundColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.1)' : 'rgba(212,175,55,0.14)' }]}>
                     <ThemedText style={styles.avatarText}>{(barber.name ?? 'B').slice(0, 2).toUpperCase()}</ThemedText>
                   </View>
-                  <ThemedText style={styles.barberName}>{barber.name.split(' ')[0]}</ThemedText>
-                  <ThemedText style={styles.barberMeta}>Master</ThemedText>
+                  <ThemedText style={[styles.barberName, { color: palette.text }]}>{barber.name.split(' ')[0]}</ThemedText>
+                  <ThemedText style={[styles.barberMeta, { color: palette.muted }]}>Master</ThemedText>
                 </Animated.View>
               ))}
             </View>
