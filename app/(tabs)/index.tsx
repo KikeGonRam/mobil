@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { CopilotStep, CopilotText, useCopilot } from 'react-native-copilot';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -8,6 +10,8 @@ import { useAuth } from '@/contexts/auth-context';
 import { Brand, Colors } from '@/constants/theme';
 import { useThemeMode } from '@/contexts/theme-context';
 import { api, type AppointmentRecord } from '@/lib/api';
+import { useResponsive } from '@/hooks/use-responsive';
+import { useTour } from '@/hooks/use-tour';
 
 type DashboardData = {
   role: string;
@@ -23,9 +27,16 @@ type DashboardData = {
 export default function HomeScreen() {
   const { token, user, signOut } = useAuth();
   const { resolvedMode } = useThemeMode();
+  const { isSmallPhone, isTablet, wp, spacing, fontScale } = useResponsive();
+  const { canShowTour, markTourComplete } = useTour();
+  const { start: startTour, stop: stopTour } = useCopilot();
   const palette = Colors[resolvedMode];
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasStartedTour = useRef(false);
+  const heroRef = useRef(null);
+  const appointmentsRef = useRef(null);
+  const kpisRef = useRef(null);
 
   const loadDashboard = useCallback(async () => {
     if (!token) {
@@ -46,40 +57,62 @@ export default function HomeScreen() {
     void loadDashboard();
   }, [loadDashboard]);
 
+  // Iniciar tour en la primera carga si es la primera vez
+  useFocusEffect(
+    useCallback(() => {
+      if (canShowTour() && !hasStartedTour.current && !loading && dashboard) {
+        hasStartedTour.current = true;
+        const timer = setTimeout(() => {
+          startTour();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+      return;
+    }, [canShowTour, loading, dashboard, startTour])
+  );
+
   const kpis = dashboard?.data.kpis ?? {};
+  const gridColumns = isSmallPhone ? 2 : isTablet ? 4 : 2;
+  const contentPadding = spacing(20);
 
   return (
     <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
-          <ThemedText type="title" style={[styles.brand, { color: palette.text }]}>
-            BARBER <ThemedText type="title" style={styles.goldText}>PRO</ThemedText>
-          </ThemedText>
-          <ThemedText style={[styles.heroTitle, { color: palette.text }]}>
-            ¡HOLA, {user?.name ? user.name.split(' ')[0].toUpperCase() : 'MAESTRO'}!
-          </ThemedText>
-          <View style={[styles.roleBadge, { borderColor: 'rgba(212,175,55,0.2)', backgroundColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.08)' : 'rgba(212,175,55,0.16)' }]}>
-            <View style={styles.liveIndicator} />
-            <ThemedText style={[styles.roleBadgeText, { color: Brand.gold }]}>
-              {dashboard?.role === 'administrador' && 'Panel Administrativo'}
-              {dashboard?.role === 'barbero' && 'Panel Profesional'}
-              {dashboard?.role === 'recepcionista' && 'Panel Operativo'}
-              {dashboard?.role === 'cliente' && 'Experiencia Cliente'}
-              {!dashboard?.role && 'Panel de Control'}
+      <ScrollView contentContainerStyle={[styles.content, { gap: spacing(16), padding: contentPadding }]} showsVerticalScrollIndicator={false}>
+        <CopilotStep
+          text={<CopilotText>Bienvenido a tu panel de control. Aquí verás toda la información de tu barbería.</CopilotText>}
+          order={1}
+          name="step-header"
+        >
+          <View ref={heroRef} style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText type="title" style={[styles.brand, { color: palette.text, fontSize: fontScale(32) }]}>
+              BARBER <ThemedText type="title" style={styles.goldText}>PRO</ThemedText>
             </ThemedText>
+            <ThemedText style={[styles.heroTitle, { color: palette.text, fontSize: fontScale(16) }]}>
+              ¡HOLA, {user?.name ? user.name.split(' ')[0].toUpperCase() : 'MAESTRO'}!
+            </ThemedText>
+            <View style={[styles.roleBadge, { borderColor: 'rgba(212,175,55,0.2)', backgroundColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.08)' : 'rgba(212,175,55,0.16)' }]}>
+              <View style={styles.liveIndicator} />
+              <ThemedText style={[styles.roleBadgeText, { color: Brand.gold, fontSize: fontScale(10) }]}>
+                {dashboard?.role === 'administrador' && 'Panel Administrativo'}
+                {dashboard?.role === 'barbero' && 'Panel Profesional'}
+                {dashboard?.role === 'recepcionista' && 'Panel Operativo'}
+                {dashboard?.role === 'cliente' && 'Experiencia Cliente'}
+                {!dashboard?.role && 'Panel de Control'}
+              </ThemedText>
+            </View>
           </View>
-        </View>
+        </CopilotStep>
 
         <View style={[styles.userBar, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <View style={styles.userInfo}>
             <View style={styles.avatar}>
-              <ThemedText style={styles.avatarText}>{(user?.name ?? 'U').slice(0, 2).toUpperCase()}</ThemedText>
+              <ThemedText style={[styles.avatarText, { fontSize: fontScale(16) }]}>{(user?.name ?? 'U').slice(0, 2).toUpperCase()}</ThemedText>
             </View>
             <View>
-              <ThemedText type="defaultSemiBold" style={[styles.userName, { color: palette.text }]}>
+              <ThemedText type="defaultSemiBold" style={[styles.userName, { color: palette.text, fontSize: fontScale(15) }]}>
                 {user?.name ?? 'Usuario'}
               </ThemedText>
-              <ThemedText style={[styles.userEmail, { color: palette.muted }]}>{user?.email}</ThemedText>
+              <ThemedText style={[styles.userEmail, { color: palette.muted, fontSize: fontScale(11) }]}>{user?.email}</ThemedText>
             </View>
           </View>
           <Pressable onPress={signOut} style={styles.logoutButton}>
@@ -90,66 +123,95 @@ export default function HomeScreen() {
         {loading ? (
           <View style={styles.loader}>
             <ActivityIndicator color={Brand.gold} />
-            <ThemedText style={[styles.loaderText, { color: palette.muted }]}>Sincronizando con el estudio...</ThemedText>
+            <ThemedText style={[styles.loaderText, { color: palette.muted, fontSize: fontScale(12) }]}>Sincronizando con el estudio...</ThemedText>
           </View>
         ) : (
-          <View style={styles.grid}>
-            <MetricCard 
-              label="Citas hoy" 
-              value={String(kpis.appointments_today ?? 0)} 
-              icon="calendar-check" 
-              color="rgba(59,130,246,0.1)" 
-              textColor="#60a5fa"
-            />
-            <MetricCard 
-              label="Ingresos hoy" 
-              value={`$${Number(kpis.income_today ?? 0).toFixed(0)}`} 
-              icon="cash-multiple" 
-              color="rgba(34,197,94,0.1)" 
-              textColor="#4ade80"
-            />
-            <MetricCard 
-              label="Clientes" 
-              value={String(kpis.new_clients ?? 0)} 
-              icon="account-group" 
-              color="rgba(249,115,22,0.1)" 
-              textColor="#fb923c"
-            />
-            <MetricCard 
-              label="Rating" 
-              value={`${kpis.rating ?? '5.0'}`} 
-              icon="star" 
-              color="rgba(212,175,55,0.1)" 
-              textColor={Brand.gold}
-            />
-          </View>
+          <CopilotStep
+            text={<CopilotText>Aquí ves tus métricas en tiempo real: citas, ingresos, clientes y calificación.</CopilotText>}
+            order={2}
+            name="step-kpis"
+          >
+            <View ref={kpisRef} style={[styles.grid, { gap: spacing(12) }]}>
+              {[1, 2, 3, 4].map((i) => {
+                const metricWidth = (100 / gridColumns) - (12 * (gridColumns - 1) / gridColumns);
+                const metrics = [
+                  {
+                    label: 'Citas hoy',
+                    value: String(kpis.appointments_today ?? 0),
+                    icon: 'calendar-check',
+                    color: 'rgba(59,130,246,0.1)',
+                    textColor: '#60a5fa',
+                  },
+                  {
+                    label: 'Ingresos hoy',
+                    value: `$${Number(kpis.income_today ?? 0).toFixed(0)}`,
+                    icon: 'cash-multiple',
+                    color: 'rgba(34,197,94,0.1)',
+                    textColor: '#4ade80',
+                  },
+                  {
+                    label: 'Clientes',
+                    value: String(kpis.new_clients ?? 0),
+                    icon: 'account-group',
+                    color: 'rgba(249,115,22,0.1)',
+                    textColor: '#fb923c',
+                  },
+                  {
+                    label: 'Rating',
+                    value: `${kpis.rating ?? '5.0'}`,
+                    icon: 'star',
+                    color: 'rgba(212,175,55,0.1)',
+                    textColor: Brand.gold,
+                  },
+                ];
+                const metric = metrics[i - 1];
+                return (
+                  <View key={i} style={[styles.metricCard, { borderColor: metric.color, width: `${metricWidth}%` }]}>
+                    <View style={styles.metricTop}>
+                      <ThemedText style={[styles.metricLabel, { fontSize: fontScale(10) }]}>{metric.label}</ThemedText>
+                      <View style={[styles.metricIcon, { backgroundColor: metric.color }]}>
+                        <MaterialCommunityIcons name={metric.icon as any} size={16} color={metric.textColor} />
+                      </View>
+                    </View>
+                    <ThemedText style={[styles.metricValue, { color: metric.textColor, fontSize: fontScale(26) }]}>{metric.value}</ThemedText>
+                  </View>
+                );
+              })}
+            </View>
+          </CopilotStep>
         )}
 
-        <View style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
-          <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
-              Próximas citas
-            </ThemedText>
-            <Pressable onPress={loadDashboard}>
-              <ThemedText style={styles.reload}>Actualizar</ThemedText>
-            </Pressable>
-          </View>
+        <CopilotStep
+          text={<CopilotText>Aquí están tus próximas citas. Haz clic para actualizar la información.</CopilotText>}
+          order={3}
+          name="step-appointments"
+        >
+          <View ref={appointmentsRef} style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card, padding: contentPadding }]}>
+            <View style={styles.sectionHeader}>
+              <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text, fontSize: fontScale(14) }]}>
+                Próximas citas
+              </ThemedText>
+              <Pressable onPress={loadDashboard}>
+                <ThemedText style={[styles.reload, { fontSize: fontScale(11) }]}>Actualizar</ThemedText>
+              </Pressable>
+            </View>
 
-          {(dashboard?.data.next_appointments ?? []).length ? (
-            (dashboard?.data.next_appointments ?? []).map((appointment) => (
-              <View key={String(appointment.id ?? Math.random())} style={[styles.listItem, { borderColor: palette.border, backgroundColor: palette.accent }]}>
-                <ThemedText type="defaultSemiBold" style={[styles.listTitle, { color: palette.text }]}>
-                  {String(appointment.service?.nombre ?? 'Servicio')}
-                </ThemedText>
-                <ThemedText style={[styles.listMeta, { color: palette.muted }]}>
-                  {String(appointment.fecha ?? '')} - {String(appointment.hora_inicio ?? '')}
-                </ThemedText>
-              </View>
-            ))
-          ) : (
-            <ThemedText style={styles.emptyState}>No hay citas próximas cargadas en este perfil.</ThemedText>
-          )}
-        </View>
+            {(dashboard?.data.next_appointments ?? []).length ? (
+              (dashboard?.data.next_appointments ?? []).map((appointment) => (
+                <View key={String(appointment.id ?? Math.random())} style={[styles.listItem, { borderColor: palette.border, backgroundColor: palette.accent }]}>
+                  <ThemedText type="defaultSemiBold" style={[styles.listTitle, { color: palette.text, fontSize: fontScale(14) }]}>
+                    {String(appointment.service?.nombre ?? 'Servicio')}
+                  </ThemedText>
+                  <ThemedText style={[styles.listMeta, { color: palette.muted, fontSize: fontScale(12) }]}>
+                    {String(appointment.fecha ?? '')} - {String(appointment.hora_inicio ?? '')}
+                  </ThemedText>
+                </View>
+              ))
+            ) : (
+              <ThemedText style={[styles.emptyState, { fontSize: fontScale(13) }]}>No hay citas próximas cargadas en este perfil.</ThemedText>
+            )}
+          </View>
+        </CopilotStep>
       </ScrollView>
     </ThemedView>
   );
@@ -168,15 +230,16 @@ function MetricCard({
   color: string;
   textColor: string;
 }) {
+  const { fontScale } = useResponsive();
   return (
     <View style={[styles.metricCard, { borderColor: color }]}>
       <View style={styles.metricTop}>
-        <ThemedText style={styles.metricLabel}>{label}</ThemedText>
+        <ThemedText style={[styles.metricLabel, { fontSize: fontScale(10) }]}>{label}</ThemedText>
         <View style={[styles.metricIcon, { backgroundColor: color }]}>
           <MaterialCommunityIcons name={icon as any} size={16} color={textColor} />
         </View>
       </View>
-      <ThemedText style={[styles.metricValue, { color: textColor }]}>{value}</ThemedText>
+      <ThemedText style={[styles.metricValue, { color: textColor, fontSize: fontScale(26) }]}>{value}</ThemedText>
     </View>
   );
 }
@@ -186,9 +249,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
     paddingBottom: 32,
-    gap: 16,
   },
   hero: {
     borderRadius: 28,
@@ -197,7 +258,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   brand: {
-    fontSize: 32,
     lineHeight: 36,
     fontWeight: '900',
     letterSpacing: -1,
@@ -206,7 +266,6 @@ const styles = StyleSheet.create({
     color: Brand.gold,
   },
   heroTitle: {
-    fontSize: 16,
     fontWeight: '900',
     letterSpacing: 2,
   },
@@ -228,7 +287,6 @@ const styles = StyleSheet.create({
   },
   roleBadgeText: {
     color: Brand.gold,
-    fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -259,14 +317,11 @@ const styles = StyleSheet.create({
   avatarText: {
     color: Brand.gold,
     fontWeight: '900',
-    fontSize: 16,
   },
   userName: {
-    fontSize: 15,
     fontWeight: '800',
   },
   userEmail: {
-    fontSize: 11,
     marginTop: 2,
   },
   logoutButton: {
@@ -288,7 +343,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loaderText: {
-    fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -296,10 +350,8 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
   },
   metricCard: {
-    width: '48%',
     minHeight: 110,
     borderRadius: 20,
     borderWidth: 1,
@@ -322,12 +374,10 @@ const styles = StyleSheet.create({
     color: Brand.muted,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
-    fontSize: 10,
     fontWeight: '800',
     flex: 1,
   },
   metricValue: {
-    fontSize: 26,
     lineHeight: 30,
     fontWeight: '900',
     marginTop: 8,
@@ -335,7 +385,6 @@ const styles = StyleSheet.create({
   sectionCard: {
     borderRadius: 24,
     borderWidth: 1,
-    padding: 20,
     gap: 16,
   },
   sectionHeader: {
@@ -346,14 +395,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     textTransform: 'uppercase',
     letterSpacing: 2,
-    fontSize: 14,
     fontWeight: '900',
   },
   reload: {
     color: Brand.gold,
     textTransform: 'uppercase',
     letterSpacing: 1,
-    fontSize: 11,
     fontWeight: '800',
   },
   listItem: {
@@ -364,11 +411,9 @@ const styles = StyleSheet.create({
   },
   listTitle: {
     fontWeight: '800',
-    fontSize: 14,
     textTransform: 'uppercase',
   },
   listMeta: {
-    fontSize: 12,
     fontWeight: '600',
   },
   emptyState: {

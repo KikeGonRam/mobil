@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { AppShell } from '@/components/app-shell';
+import { TourProvider } from '@/components/tour-provider';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { ThemeModeProvider, useThemeMode } from '@/contexts/theme-context';
 import { Brand, Colors } from '@/constants/theme';
@@ -40,9 +41,11 @@ function ThemedRoot() {
 
   return (
     <ThemeProvider value={barbershopTheme}>
-      <AppShell>
-        <RootNavigator />
-      </AppShell>
+      <TourProvider>
+        <AppShell>
+          <RootNavigator />
+        </AppShell>
+      </TourProvider>
       <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
   );

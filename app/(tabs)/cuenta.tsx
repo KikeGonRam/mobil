@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -8,16 +9,22 @@ import { useThemeMode } from '@/contexts/theme-context';
 import { Brand, Colors } from '@/constants/theme';
 import { api, ApiError, type AppointmentRecord } from '@/lib/api';
 import { useRouter } from 'expo-router';
+import { useResponsive } from '@/hooks/use-responsive';
+import { useTour } from '@/hooks/use-tour';
 
 export default function AccountScreen() {
   const { token, user, signOut, refreshSession } = useAuth();
   const { mode, cycleMode } = useThemeMode();
+  const { spacing, fontScale } = useResponsive();
+  const { resetTour, markTourComplete } = useTour();
   const palette = Colors[mode === 'system' ? 'dark' : mode];
   const router = useRouter();
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const contentPadding = spacing(20);
+  const cardPadding = spacing(18);
 
   const loadUnreadNotifications = useCallback(async () => {
     if (!token) return;
@@ -89,108 +96,117 @@ export default function AccountScreen() {
     [token]
   );
 
+  const handleStartTour = () => {
+    void resetTour();
+    // El tour se iniciará automáticamente en index.tsx en la siguiente navegación o recarga
+    Alert.alert('Tutorial', 'El tutorial se mostrará la próxima vez que accedas a la app.');
+  };
+
   return (
     <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
-          <ThemedText type="title" style={[styles.title, { color: palette.text }]}>
+      <ScrollView contentContainerStyle={[styles.content, { padding: contentPadding, gap: spacing(14) }]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card, padding: contentPadding }]}>
+          <ThemedText type="title" style={[styles.title, { color: palette.text, fontSize: fontScale(28) }]}>
             Mi cuenta
           </ThemedText>
-          <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
+          <ThemedText style={[styles.subtitle, { color: palette.muted, fontSize: fontScale(14) }]}>
             La sesión móvil usa el token emitido por Laravel y se sincroniza con el backend.
           </ThemedText>
         </View>
 
-        <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
-          <ThemedText type="defaultSemiBold" style={[styles.name, { color: palette.text }]}>
+        <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card, padding: cardPadding }]}>
+          <ThemedText type="defaultSemiBold" style={[styles.name, { color: palette.text, fontSize: fontScale(18) }]}>
             {user?.name ?? 'Usuario'}
           </ThemedText>
-          <ThemedText style={[styles.meta, { color: palette.muted }]}>{user?.email ?? ''}</ThemedText>
-          <ThemedText style={[styles.meta, { color: palette.muted }]}>{user?.roles?.join(' · ') ?? 'Sin rol'}</ThemedText>
+          <ThemedText style={[styles.meta, { color: palette.muted, fontSize: fontScale(13) }]}>{user?.email ?? ''}</ThemedText>
+          <ThemedText style={[styles.meta, { color: palette.muted, fontSize: fontScale(13) }]}>{user?.roles?.join(' · ') ?? 'Sin rol'}</ThemedText>
 
-          <View style={styles.actions}>
+          <View style={[styles.actions, { gap: spacing(10), marginTop: spacing(10) }]}>
             <Pressable onPress={cycleMode} style={[styles.secondaryButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
-              <ThemedText style={styles.secondaryButtonText}>Tema: {mode}</ThemedText>
+              <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Tema: {mode}</ThemedText>
             </Pressable>
             <Pressable onPress={() => router.push('/perfil')} style={styles.secondaryButton}>
-              <ThemedText style={styles.secondaryButtonText}>Editar perfil</ThemedText>
+              <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Editar perfil</ThemedText>
+            </Pressable>
+            <Pressable onPress={handleStartTour} style={[styles.secondaryButton, { borderColor: 'rgba(212,175,55,0.3)', backgroundColor: 'rgba(212,175,55,0.08)' }]}>
+              <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12), color: Brand.gold }]}>Ver tutorial</ThemedText>
             </Pressable>
             <Pressable
               onPress={() => router.push('/notificaciones')}
               style={styles.secondaryButton}>
               <View style={styles.notificationButtonContent}>
-                <ThemedText style={styles.secondaryButtonText}>Notificaciones</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Notificaciones</ThemedText>
                 {unreadNotifications > 0 && (
                   <View style={styles.badge}>
-                    <ThemedText style={styles.badgeText}>{unreadNotifications}</ThemedText>
+                    <ThemedText style={[styles.badgeText, { fontSize: fontScale(10) }]}>{unreadNotifications}</ThemedText>
                   </View>
                 )}
               </View>
             </Pressable>
             <Pressable onPress={() => router.push('/chat')} style={styles.secondaryButton}>
-              <ThemedText style={styles.secondaryButtonText}>Chat</ThemedText>
+              <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Chat</ThemedText>
             </Pressable>
             {user?.roles?.includes('barbero') && (
               <Pressable onPress={() => router.push('/agenda')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Agenda</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Agenda</ThemedText>
               </Pressable>
             )}
             {user?.roles?.includes('barbero') && (
               <Pressable onPress={() => router.push('/horario')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Horario</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Horario</ThemedText>
               </Pressable>
             )}
             {user?.roles?.includes('barbero') && (
               <Pressable onPress={() => router.push('/portafolio')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Portafolio</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Portafolio</ThemedText>
               </Pressable>
             )}
             {user?.roles?.includes('administrador') && (
               <Pressable onPress={() => router.push('/reportes')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Reportes</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Reportes</ThemedText>
               </Pressable>
             )}
             {user?.roles?.includes('administrador') && (
               <Pressable onPress={() => router.push('/configuracion')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Configuracion</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Configuracion</ThemedText>
               </Pressable>
             )}
             {user?.roles?.includes('administrador') && (
               <Pressable onPress={() => router.push('/usuarios')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Usuarios</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Usuarios</ThemedText>
               </Pressable>
             )}
             {user?.roles?.some((role) => role === 'administrador' || role === 'recepcionista') && (
               <Pressable onPress={() => router.push('/clientes')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Clientes</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Clientes</ThemedText>
               </Pressable>
             )}
             {user?.roles?.some((role) => role === 'administrador' || role === 'recepcionista') && (
               <Pressable onPress={() => router.push('/inventario')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Inventario</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Inventario</ThemedText>
               </Pressable>
             )}
             {user?.roles?.some((role) => role === 'administrador' || role === 'recepcionista') && (
               <Pressable onPress={() => router.push('/pagos')} style={styles.secondaryButton}>
-                <ThemedText style={styles.secondaryButtonText}>Pagos</ThemedText>
+                <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Pagos</ThemedText>
               </Pressable>
             )}
             <Pressable onPress={refreshSession} style={[styles.secondaryButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
-              <ThemedText style={styles.secondaryButtonText}>Sincronizar</ThemedText>
+              <ThemedText style={[styles.secondaryButtonText, { fontSize: fontScale(12) }]}>Sincronizar</ThemedText>
             </Pressable>
             <Pressable onPress={signOut} style={styles.logoutButton}>
-              <ThemedText style={styles.logoutText}>Cerrar sesión</ThemedText>
+              <ThemedText style={[styles.logoutText, { fontSize: fontScale(12) }]}>Cerrar sesión</ThemedText>
             </Pressable>
           </View>
         </View>
 
-        <View style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
+        <View style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card, padding: spacing(16), gap: spacing(12) }]}>
           <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text, fontSize: fontScale(13) }]}>
               Mis citas
             </ThemedText>
             <Pressable onPress={loadAppointments}>
-              <ThemedText style={styles.reload}>Actualizar</ThemedText>
+              <ThemedText style={[styles.reload, { fontSize: fontScale(12) }]}>Actualizar</ThemedText>
             </Pressable>
           </View>
 
@@ -210,16 +226,16 @@ export default function AccountScreen() {
                 <Pressable
                   key={String(appointment.id)}
                   onPress={() => router.push({ pathname: '/appointments/[id]', params: { id: String(appointment.id) } })}
-                  style={[styles.listItem, { borderColor: palette.border, backgroundColor: palette.accent }]}>
+                  style={[styles.listItem, { borderColor: palette.border, backgroundColor: palette.accent, padding: spacing(14), gap: spacing(8) }]}>
                   <View style={styles.listItemHeader}>
-                    <ThemedText type="defaultSemiBold" style={[styles.listTitle, { color: palette.text }]}>
+                    <ThemedText type="defaultSemiBold" style={[styles.listTitle, { color: palette.text, fontSize: fontScale(14) }]}>
                       {String(appointment.service?.nombre ?? 'Servicio')}
                     </ThemedText>
-                    <ThemedText style={[styles.status, getStatusStyle(appointment.estado)]}>
+                    <ThemedText style={[styles.status, getStatusStyle(appointment.estado), { fontSize: fontScale(11) }]}>
                       {String(appointment.estado ?? '')}
                     </ThemedText>
                   </View>
-                  <ThemedText style={[styles.listMeta, { color: palette.muted }]}>
+                  <ThemedText style={[styles.listMeta, { color: palette.muted, fontSize: fontScale(12) }]}>
                     {String(appointment.fecha ?? '')} · {String(appointment.hora_inicio ?? '')}
                   </ThemedText>
                   {canCancel && (
@@ -236,7 +252,7 @@ export default function AccountScreen() {
                       {isCancelling ? (
                         <ActivityIndicator color="#fff" size="small" />
                       ) : (
-                        <ThemedText style={styles.cancelButtonText}>Cancelar cita</ThemedText>
+                        <ThemedText style={[styles.cancelButtonText, { fontSize: fontScale(11) }]}>Cancelar cita</ThemedText>
                       )}
                     </Pressable>
                   )}
@@ -244,7 +260,7 @@ export default function AccountScreen() {
               );
             })
           ) : (
-            <ThemedText style={[styles.empty, { color: palette.muted }]}>Aún no tienes citas registradas.</ThemedText>
+            <ThemedText style={[styles.empty, { color: palette.muted, fontSize: fontScale(13) }]}>Aún no tienes citas registradas.</ThemedText>
           )}
         </View>
       </ScrollView>
@@ -257,20 +273,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
     paddingBottom: 32,
-    gap: 14,
   },
   hero: {
     borderRadius: 24,
     borderWidth: 1,
     borderColor: Brand.line,
     backgroundColor: Brand.bgCard,
-    padding: 20,
   },
   title: {
     color: '#fff',
-    fontSize: 28,
     lineHeight: 32,
     fontWeight: '900',
   },
@@ -284,19 +296,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.line,
     backgroundColor: Brand.bgCard,
-    padding: 18,
     gap: 4,
   },
   name: {
     color: '#fff',
-    fontSize: 18,
   },
   meta: {
     color: Brand.muted,
   },
   actions: {
     flexDirection: 'row',
-    gap: 10,
     marginTop: 10,
     flexWrap: 'wrap',
   },
@@ -312,7 +321,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     textTransform: 'uppercase',
     fontWeight: '800',
-    fontSize: 12,
   },
   notificationButtonContent: {
     flexDirection: 'row',
@@ -331,7 +339,6 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#000',
     fontWeight: '900',
-    fontSize: 10,
   },
   logoutButton: {
     borderRadius: 999,
@@ -345,15 +352,12 @@ const styles = StyleSheet.create({
     color: Brand.gold,
     textTransform: 'uppercase',
     fontWeight: '800',
-    fontSize: 12,
   },
   sectionCard: {
     borderRadius: 22,
     borderWidth: 1,
     borderColor: Brand.line,
     backgroundColor: Brand.bgCard,
-    padding: 16,
-    gap: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -364,11 +368,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
+    fontWeight: '900',
   },
   reload: {
     color: Brand.gold,
     textTransform: 'uppercase',
-    fontSize: 12,
     fontWeight: '800',
   },
   loader: {
@@ -381,8 +385,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Brand.line,
     backgroundColor: Brand.bgAccent,
-    padding: 14,
-    gap: 8,
   },
   listTitle: {
     color: '#fff',
@@ -400,7 +402,6 @@ const styles = StyleSheet.create({
     color: Brand.gold,
     textTransform: 'uppercase',
     fontWeight: '800',
-    fontSize: 11,
   },
   statusPending: {
     color: '#fbbf24',
@@ -436,7 +437,6 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 11,
     textTransform: 'uppercase',
   },
   empty: {

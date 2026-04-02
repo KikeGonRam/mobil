@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { Brand, Colors } from '@/constants/theme';
 import { useThemeMode } from '@/contexts/theme-context';
 import { api } from '@/lib/api';
+import { useResponsive } from '@/hooks/use-responsive';
 
 type ServiceItem = {
   id: number;
@@ -27,6 +28,7 @@ type BarberItem = {
 export default function ExploreScreen() {
   const { token } = useAuth();
   const { resolvedMode } = useThemeMode();
+  const { spacing, fontScale } = useResponsive();
   const palette = Colors[resolvedMode];
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [barbers, setBarbers] = useState<BarberItem[]>([]);
@@ -52,25 +54,27 @@ export default function ExploreScreen() {
     }
   }
 
+  const contentPadding = spacing(20);
+
   return (
     <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <FlatList
         data={services}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { padding: contentPadding, gap: spacing(14) }]}
         ListHeaderComponent={
-          <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
-            <ThemedText type="title" style={[styles.title, { color: palette.text }]}>
+          <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card, padding: contentPadding }]}>
+            <ThemedText type="title" style={[styles.title, { color: palette.text, fontSize: fontScale(28) }]}>
               Catálogo
             </ThemedText>
-            <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
+            <ThemedText style={[styles.subtitle, { color: palette.muted, fontSize: fontScale(14) }]}>
               Los servicios y barberos se consumen directo del backend de Laravel.
             </ThemedText>
 
-            <View style={styles.topRow}>
-              <StatPill label="Servicios" value={services.length} />
-              <StatPill label="Barberos" value={barbers.length} />
-              <StatPill label="Token" value={token ? 'Activo' : 'Off'} accent={!!token} />
+            <View style={[styles.topRow, { gap: spacing(10) }]}>
+              <StatPill label="Servicios" value={services.length} fontScale={fontScale} />
+              <StatPill label="Barberos" value={barbers.length} fontScale={fontScale} />
+              <StatPill label="Token" value={token ? 'Activo' : 'Off'} accent={!!token} fontScale={fontScale} />
             </View>
           </View>
         }
@@ -78,42 +82,42 @@ export default function ExploreScreen() {
           loading ? (
             <View style={styles.loader}>
               <ActivityIndicator color={Brand.gold} />
-              <ThemedText style={[styles.loaderText, { color: palette.muted }]}>Cargando catálogo...</ThemedText>
+              <ThemedText style={[styles.loaderText, { color: palette.muted, fontSize: fontScale(12) }]}>Cargando catálogo...</ThemedText>
             </View>
           ) : (
-            <ThemedText style={[styles.empty, { color: palette.muted }]}>No hay servicios publicados.</ThemedText>
+            <ThemedText style={[styles.empty, { color: palette.muted, fontSize: fontScale(13) }]}>No hay servicios publicados.</ThemedText>
           )
         }
         renderItem={({ item }) => (
-          <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card, padding: spacing(16) }]}>
             <View style={styles.cardHeader}>
-              <ThemedText type="defaultSemiBold" style={[styles.cardTitle, { color: palette.text }]}>
+              <ThemedText type="defaultSemiBold" style={[styles.cardTitle, { color: palette.text, fontSize: fontScale(15) }]}>
                 {item.nombre}
               </ThemedText>
-              <ThemedText style={styles.price}>${Number(item.precio ?? 0).toFixed(2)}</ThemedText>
+              <ThemedText style={[styles.price, { fontSize: fontScale(14) }]}>${Number(item.precio ?? 0).toFixed(2)}</ThemedText>
             </View>
-            <ThemedText style={[styles.cardMeta, { color: palette.muted }]}>
+            <ThemedText style={[styles.cardMeta, { color: palette.muted, fontSize: fontScale(11) }]}>
               {item.categoria ?? 'general'} · {item.duracion_min ?? 0} min
             </ThemedText>
-            {item.descripcion ? <ThemedText style={[styles.cardCopy, { color: palette.text }]}>{item.descripcion}</ThemedText> : null}
+            {item.descripcion ? <ThemedText style={[styles.cardCopy, { color: palette.text, fontSize: fontScale(13) }]}>{item.descripcion}</ThemedText> : null}
           </View>
         )}
         ListFooterComponent={
-          <View style={styles.barberSection}>
-            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
+          <View style={[styles.barberSection, { gap: spacing(12), marginTop: spacing(6) }]}>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text, fontSize: fontScale(14) }]}>
               Barberos
             </ThemedText>
             {barbers.map((barber) => (
-              <View key={String(barber.id)} style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
-                <ThemedText type="defaultSemiBold" style={[styles.cardTitle, { color: palette.text }]}>
+              <View key={String(barber.id)} style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card, padding: spacing(16) }]}>
+                <ThemedText type="defaultSemiBold" style={[styles.cardTitle, { color: palette.text, fontSize: fontScale(15) }]}>
                   {barber.name}
                 </ThemedText>
-                <ThemedText style={[styles.cardMeta, { color: palette.muted }]}>{barber.especialidades ?? 'Sin especialidades'}</ThemedText>
-                {barber.descripcion ? <ThemedText style={[styles.cardCopy, { color: palette.text }]}>{barber.descripcion}</ThemedText> : null}
+                <ThemedText style={[styles.cardMeta, { color: palette.muted, fontSize: fontScale(11) }]}>{barber.especialidades ?? 'Sin especialidades'}</ThemedText>
+                {barber.descripcion ? <ThemedText style={[styles.cardCopy, { color: palette.text, fontSize: fontScale(13) }]}>{barber.descripcion}</ThemedText> : null}
               </View>
             ))}
             <Pressable onPress={loadCatalog} style={styles.refreshButton}>
-              <ThemedText style={styles.refreshText}>Actualizar catálogo</ThemedText>
+              <ThemedText style={[styles.refreshText, { fontSize: fontScale(12) }]}>Actualizar catálogo</ThemedText>
             </Pressable>
           </View>
         }
@@ -124,11 +128,11 @@ export default function ExploreScreen() {
   );
 }
 
-function StatPill({ label, value, accent = false }: { label: string; value: number | string; accent?: boolean }) {
+function StatPill({ label, value, accent = false, fontScale }: { label: string; value: number | string; accent?: boolean; fontScale: (size: number) => number }) {
   return (
     <View style={[styles.pill, accent ? styles.pillAccent : null]}>
-      <ThemedText style={styles.pillLabel}>{label}</ThemedText>
-      <ThemedText style={[styles.pillValue, accent ? styles.pillValueAccent : null]}>{value}</ThemedText>
+      <ThemedText style={[styles.pillLabel, { fontSize: fontScale(10) }]}>{label}</ThemedText>
+      <ThemedText style={[styles.pillValue, accent ? styles.pillValueAccent : null, { fontSize: fontScale(18) }]}>{value}</ThemedText>
     </View>
   );
 }
@@ -138,18 +142,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
     paddingBottom: 32,
-    gap: 14,
   },
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    padding: 20,
     gap: 12,
   },
   title: {
-    fontSize: 28,
     lineHeight: 32,
     fontWeight: '900',
   },
@@ -159,7 +159,6 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
   },
   pill: {
     minWidth: 96,
@@ -176,13 +175,11 @@ const styles = StyleSheet.create({
     color: Brand.muted,
     textTransform: 'uppercase',
     letterSpacing: 1,
-    fontSize: 10,
   },
   pillValue: {
     color: '#fff',
     marginTop: 4,
     fontWeight: '900',
-    fontSize: 18,
   },
   pillValueAccent: {
     color: Brand.gold,
@@ -195,15 +192,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
   },
-  loaderText: {
-  },
+  loaderText: {},
   empty: {
     fontStyle: 'italic',
   },
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    padding: 16,
     gap: 6,
   },
   cardHeader: {
@@ -221,18 +216,17 @@ const styles = StyleSheet.create({
   cardMeta: {
     textTransform: 'uppercase',
     letterSpacing: 1,
-    fontSize: 11,
   },
   cardCopy: {
     lineHeight: 20,
   },
   barberSection: {
-    gap: 12,
     marginTop: 6,
   },
   sectionTitle: {
     textTransform: 'uppercase',
     letterSpacing: 1.5,
+    fontWeight: '900',
   },
   refreshButton: {
     alignSelf: 'flex-start',
@@ -246,7 +240,6 @@ const styles = StyleSheet.create({
   refreshText: {
     color: Brand.gold,
     textTransform: 'uppercase',
-    fontSize: 12,
     fontWeight: '800',
   },
 });
