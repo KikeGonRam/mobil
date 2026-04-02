@@ -3,25 +3,26 @@ import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { useThemeMode } from '@/contexts/theme-context';
 
 export default function SettingsScreen() {
   const { mode, cycleMode } = useThemeMode();
+  const palette = Colors[mode === 'system' ? 'dark' : mode];
   const [notifications, setNotifications] = useState(true);
   const [maintenancePreview, setMaintenancePreview] = useState(false);
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.hero}>
+        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <ThemedText type="title" style={styles.title}>Configuracion</ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
             Modulo movil alineado al panel web para ajustes base del sistema.
           </ThemedText>
         </View>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <Row
             label="Tema de la aplicacion"
             value={mode}
@@ -43,7 +44,7 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <View style={styles.notice}>
+        <View style={[styles.notice, { borderColor: 'rgba(212,175,55,0.3)', backgroundColor: resolvedNoticeBackground(palette.background) }]}>
           <ThemedText style={styles.noticeTitle}>Nota tecnica</ThemedText>
           <ThemedText style={styles.noticeCopy}>
             Para guardar configuraciones globales reales como en Laravel web, falta API dedicada para settings y maintenance toggle.
@@ -66,31 +67,31 @@ function Row({ label, value, action }: { label: string; value: string; action: R
   );
 }
 
+function resolvedNoticeBackground(background: string) {
+  return background === Colors.dark.background ? 'rgba(212,175,55,0.08)' : 'rgba(212,175,55,0.12)';
+}
+
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Brand.bgMain },
+  screen: { flex: 1 },
   content: { padding: 20, paddingBottom: 30, gap: 14 },
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     padding: 20,
   },
   title: { color: '#fff', fontWeight: '900', fontSize: 30 },
-  subtitle: { marginTop: 8, color: Brand.muted, lineHeight: 22 },
+  subtitle: { marginTop: 8, lineHeight: 22 },
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     padding: 12,
     gap: 10,
   },
   row: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -112,8 +113,6 @@ const styles = StyleSheet.create({
   notice: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: 'rgba(212,175,55,0.08)',
     padding: 14,
     gap: 4,
   },

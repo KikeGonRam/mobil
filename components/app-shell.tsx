@@ -5,8 +5,9 @@ import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View 
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
+import { useThemeMode } from '@/contexts/theme-context';
 
 const ICONS = {
   dashboard: 'view-dashboard-outline',
@@ -47,8 +48,10 @@ export function AppShell({ children }: PropsWithChildren) {
   const pathname = usePathname();
   const { width } = useWindowDimensions();
   const { user, signOut } = useAuth();
+  const { resolvedMode } = useThemeMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const normalizedPath = normalizePath(pathname);
+  const palette = Colors[resolvedMode];
 
   const isAuthenticatedView = !PUBLIC_ROUTES.has(normalizedPath);
   const isDesktopWeb = Platform.OS === 'web' && width >= 1024;
@@ -66,7 +69,7 @@ export function AppShell({ children }: PropsWithChildren) {
   }
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <View style={[styles.shell, isDesktopWeb ? styles.shellDesktop : styles.shellMobile]}>
         {isDesktopWeb ? (
           <Sidebar
@@ -372,7 +375,6 @@ function normalizePath(pathname: string) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Brand.bgMain,
   },
   shell: {
     flex: 1,

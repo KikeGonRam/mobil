@@ -14,8 +14,9 @@ import Animated, {
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api } from '@/lib/api';
 
 type ChatMessage = {
@@ -31,6 +32,8 @@ function makeId() {
 export default function ChatScreen() {
   const router = useRouter();
   const { token } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
   const backdropOpacity = useSharedValue(0);
   const cardProgress = useSharedValue(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -164,26 +167,26 @@ export default function ChatScreen() {
   }, [input, sending, token]);
 
   return (
-    <ThemedView style={styles.backdrop}>
+    <ThemedView style={[styles.backdrop, { backgroundColor: resolvedMode === 'dark' ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.72)' }]}>
       <Stack.Screen options={{ title: 'Asistente', headerShown: false }} />
-      <Animated.View pointerEvents="none" style={[styles.backdropOverlay, backdropStyle]} />
+      <Animated.View pointerEvents="none" style={[styles.backdropOverlay, backdropStyle, { backgroundColor: resolvedMode === 'dark' ? 'rgba(0,0,0,0.24)' : 'rgba(255,255,255,0.12)' }]} />
       <Pressable style={styles.backdropPressable} onPress={() => router.back()}>
-        <Animated.View style={[styles.modalCard, modalStyle]}>
+        <Animated.View style={[styles.modalCard, modalStyle, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerCopy}>
               <ThemedText type="title" style={styles.title}>Asistente</ThemedText>
               <ThemedText style={styles.subtitle}>Consulta rapida para tu barberia.</ThemedText>
             </View>
-            <Pressable onPress={() => router.back()} style={styles.closeButton}>
+            <Pressable onPress={() => router.back()} style={[styles.closeButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
               <ThemedText style={styles.closeButtonText}>Cerrar</ThemedText>
             </Pressable>
           </View>
 
           <View style={styles.actionsRow}>
-            <Pressable onPress={loadHistory} disabled={loadingHistory} style={styles.secondaryButton}>
+            <Pressable onPress={loadHistory} disabled={loadingHistory} style={[styles.secondaryButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
               <ThemedText style={styles.secondaryButtonText}>Historial</ThemedText>
             </Pressable>
-            <Pressable onPress={clearHistory} disabled={loadingHistory} style={styles.secondaryButton}>
+            <Pressable onPress={clearHistory} disabled={loadingHistory} style={[styles.secondaryButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
               <ThemedText style={styles.secondaryButtonText}>Limpiar</ThemedText>
             </Pressable>
           </View>
@@ -201,6 +204,9 @@ export default function ChatScreen() {
                 style={[
                   styles.bubble,
                   message.role === 'user' ? styles.userBubble : styles.assistantBubble,
+                    message.role === 'user'
+                      ? { borderColor: 'rgba(212,175,55,0.35)', backgroundColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.12)' : 'rgba(212,175,55,0.16)' }
+                      : { borderColor: palette.border, backgroundColor: palette.accent },
                 ]}>
                 <ThemedText style={styles.bubbleText}>{message.text}</ThemedText>
               </View>
@@ -217,15 +223,15 @@ export default function ChatScreen() {
             <TextInput
               value={input}
               onChangeText={setInput}
-              style={styles.input}
+              style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
               placeholder="Escribe tu pregunta..."
-              placeholderTextColor="#7f7f7f"
+              placeholderTextColor={palette.muted}
               multiline
             />
             <Pressable
               onPress={sendMessage}
               disabled={!canSend}
-              style={[styles.sendButton, !canSend ? styles.sendButtonDisabled : null]}>
+              style={[styles.sendButton, { backgroundColor: Brand.gold }, !canSend ? styles.sendButtonDisabled : null]}>
               <ThemedText style={styles.sendButtonText}>Enviar</ThemedText>
             </Pressable>
           </View>
@@ -269,7 +275,6 @@ function pickString(source: Record<string, unknown>, keys: string[]): string | n
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.58)',
     justifyContent: 'flex-end',
     paddingHorizontal: 16,
     paddingTop: 16,
@@ -288,8 +293,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgMain,
     padding: 16,
     gap: 12,
     maxHeight: '82%',
@@ -332,8 +335,6 @@ const styles = StyleSheet.create({
   closeButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -355,8 +356,6 @@ const styles = StyleSheet.create({
   secondaryButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -395,8 +394,6 @@ const styles = StyleSheet.create({
   },
   assistantBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: Brand.bgCard,
-    borderColor: Brand.line,
   },
   bubbleText: {
     color: '#fff',
@@ -424,9 +421,6 @@ const styles = StyleSheet.create({
     maxHeight: 110,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
-    color: '#fff',
     paddingHorizontal: 12,
     paddingVertical: 10,
   },

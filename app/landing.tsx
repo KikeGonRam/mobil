@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { useThemeMode } from '@/contexts/theme-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -15,6 +15,7 @@ import { api, type BarberRecord, type ServiceRecord } from '@/lib/api';
 export default function LandingScreen() {
   const { token } = useAuth();
   const { mode, cycleMode, resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
   const [services, setServices] = useState<ServiceRecord[]>([]);
   const [barbers, setBarbers] = useState<BarberRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,36 +47,44 @@ export default function LandingScreen() {
   }));
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Animated.View entering={FadeInDown.duration(800).delay(100)}>
           <ImageBackground
             source={{ uri: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070&auto=format&fit=crop' }}
             style={styles.heroImage}
-            imageStyle={{ opacity: resolvedMode === 'dark' ? 0.45 : 0.7, borderRadius: 28 }}
+            imageStyle={{ opacity: resolvedMode === 'dark' ? 0.48 : 0.62, borderRadius: 28 }}
           >
-            <View style={[styles.heroOverlay, { backgroundColor: resolvedMode === 'dark' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.2)' }]}>
+            <View style={[styles.heroOverlay, { backgroundColor: resolvedMode === 'dark' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.52)' }]}>
               <View style={styles.heroTopRow}>
-                <View style={styles.brandBadge}>
-                  <ThemedText style={styles.brandBadgeText}>TRADICIÓN & VANGUARDIA</ThemedText>
+                <View style={[styles.brandBadge, { borderColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.3)' : 'rgba(0,0,0,0.18)', backgroundColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.35)' }]}>
+                  <ThemedText style={[styles.brandBadgeText, { color: Brand.gold }]}>TRADICIÓN & VANGUARDIA</ThemedText>
                 </View>
-                <Pressable onPress={cycleMode} style={styles.themeButton}>
+                <Pressable
+                  onPress={cycleMode}
+                  style={[
+                    styles.themeButton,
+                    {
+                      borderColor: resolvedMode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.16)',
+                      backgroundColor: resolvedMode === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.55)',
+                    },
+                  ]}>
                   <MaterialCommunityIcons 
                     name={mode === 'dark' ? 'moon-waning-crescent' : mode === 'light' ? 'white-balance-sunny' : 'brightness-6'} 
                     size={14} 
-                    color="#fff" 
+                    color={resolvedMode === 'dark' ? '#fff' : '#111'} 
                   />
-                  <ThemedText style={styles.themeButtonText}>
+                  <ThemedText style={[styles.themeButtonText, { color: resolvedMode === 'dark' ? '#fff' : '#111' }]}>
                     {mode.toUpperCase()}
                   </ThemedText>
                 </Pressable>
               </View>
 
               <View style={styles.heroTextContainer}>
-                <ThemedText type="title" style={[styles.heroTitle, { color: resolvedMode === 'dark' ? '#fff' : '#000' }]}>
+                <ThemedText type="title" style={[styles.heroTitle, { color: palette.text }]}>
                   LA <ThemedText style={{ color: Brand.gold, fontWeight: '900' }}>EXCELENCIA</ThemedText>
                 </ThemedText>
-                <ThemedText style={[styles.heroSubtitle, { color: resolvedMode === 'dark' ? '#fff' : '#000' }]}>
+                <ThemedText style={[styles.heroSubtitle, { color: palette.text }]}>
                   en cada detalle
                 </ThemedText>
                 
@@ -87,20 +96,23 @@ export default function LandingScreen() {
               <View style={styles.ctaRow}>
                 <Pressable
                   onPress={() => router.push(token ? '/(tabs)/reservas' : '/registro')}
-                  style={styles.primaryCta}>
+                  style={[styles.primaryCta, { backgroundColor: Brand.gold, shadowColor: Brand.gold }]}>
                   <ThemedText style={styles.primaryCtaText}>{token ? 'RESERVAR' : 'REGISTRO'}</ThemedText>
                 </Pressable>
                 <Pressable
                   onPress={() => router.push(token ? '/(tabs)' : '/login')}
-                  style={styles.secondaryCta}>
-                  <ThemedText style={[styles.secondaryCtaText, { color: resolvedMode === 'dark' ? '#fff' : '#000' }]}>{token ? 'MI PANEL' : 'ACCESO'}</ThemedText>
+                  style={[
+                    styles.secondaryCta,
+                    { borderColor: resolvedMode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.16)' },
+                  ]}>
+                  <ThemedText style={[styles.secondaryCtaText, { color: palette.text }]}>{token ? 'MI PANEL' : 'ACCESO'}</ThemedText>
                 </Pressable>
               </View>
             </View>
           </ImageBackground>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.duration(800).delay(400)} style={[styles.section, { borderColor, backgroundColor: cardBg }]}>
+        <Animated.View entering={FadeInUp.duration(800).delay(400)} style={[styles.section, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
             Servicios destacados
           </ThemedText>
@@ -111,7 +123,7 @@ export default function LandingScreen() {
             </View>
           ) : (
             services.map((service, i) => (
-              <Animated.View key={String(service.id)} entering={FadeInUp.delay(500 + i * 100)} style={[styles.card, { borderColor, backgroundColor: resolvedMode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }]}>
+              <Animated.View key={String(service.id)} entering={FadeInUp.delay(500 + i * 100)} style={[styles.card, { borderColor: palette.border, backgroundColor: palette.accent }]}>
                 <View style={styles.cardHeader}>
                   <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
                     {service.nombre}
@@ -129,7 +141,7 @@ export default function LandingScreen() {
           </Pressable>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.duration(800).delay(600)} style={[styles.section, { borderColor, backgroundColor: cardBg }]}>
+        <Animated.View entering={FadeInUp.duration(800).delay(600)} style={[styles.section, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
             Nuestros Maestros
           </ThemedText>
@@ -140,8 +152,8 @@ export default function LandingScreen() {
           ) : (
             <View style={styles.barberGrid}>
               {barbers.map((barber, i) => (
-                <Animated.View key={String(barber.id)} entering={FadeInUp.delay(700 + i * 100)} style={[styles.barberCard, { borderColor, backgroundColor: resolvedMode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }]}>
-                  <View style={styles.avatar}>
+                <Animated.View key={String(barber.id)} entering={FadeInUp.delay(700 + i * 100)} style={[styles.barberCard, { borderColor: palette.border, backgroundColor: palette.accent }]}>
+                  <View style={[styles.avatar, { borderColor: 'rgba(212,175,55,0.3)', backgroundColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.1)' : 'rgba(212,175,55,0.14)' }]}>
                     <ThemedText style={styles.avatarText}>{(barber.name ?? 'B').slice(0, 2).toUpperCase()}</ThemedText>
                   </View>
                   <ThemedText style={styles.barberName}>{barber.name.split(' ')[0]}</ThemedText>
@@ -153,7 +165,7 @@ export default function LandingScreen() {
         </Animated.View>
 
         <View style={styles.footer}>
-          <ThemedText style={styles.footerText}>Urban Blade · Premium Grooming Studio</ThemedText>
+          <ThemedText style={[styles.footerText, { color: palette.muted }]}>Urban Blade · Premium Grooming Studio</ThemedText>
         </View>
       </ScrollView>
 
@@ -163,7 +175,7 @@ export default function LandingScreen() {
           onPress={() => router.push('/chat')}
           onPressIn={() => (fabScale.value = withSpring(0.9))}
           onPressOut={() => (fabScale.value = withSpring(1))}
-          style={styles.fab}>
+          style={[styles.fab, { shadowColor: Brand.gold }]}>
           <MaterialCommunityIcons name="robot-outline" size={24} color="#000" />
         </Pressable>
       </Animated.View>
