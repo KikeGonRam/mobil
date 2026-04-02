@@ -5,7 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, type AppointmentRecord } from '@/lib/api';
 
 type DashboardData = {
@@ -21,6 +22,8 @@ type DashboardData = {
 
 export default function HomeScreen() {
   const { token, user, signOut } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,18 +49,18 @@ export default function HomeScreen() {
   const kpis = dashboard?.data.kpis ?? {};
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <ThemedText type="title" style={styles.brand}>
+        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <ThemedText type="title" style={[styles.brand, { color: palette.text }]}>
             BARBER <ThemedText type="title" style={styles.goldText}>PRO</ThemedText>
           </ThemedText>
-          <ThemedText style={styles.heroTitle}>
+          <ThemedText style={[styles.heroTitle, { color: palette.text }]}>
             ¡HOLA, {user?.name ? user.name.split(' ')[0].toUpperCase() : 'MAESTRO'}!
           </ThemedText>
-          <View style={styles.roleBadge}>
+          <View style={[styles.roleBadge, { borderColor: 'rgba(212,175,55,0.2)', backgroundColor: resolvedMode === 'dark' ? 'rgba(212,175,55,0.08)' : 'rgba(212,175,55,0.16)' }]}>
             <View style={styles.liveIndicator} />
-            <ThemedText style={styles.roleBadgeText}>
+            <ThemedText style={[styles.roleBadgeText, { color: Brand.gold }]}>
               {dashboard?.role === 'administrador' && 'Panel Administrativo'}
               {dashboard?.role === 'barbero' && 'Panel Profesional'}
               {dashboard?.role === 'recepcionista' && 'Panel Operativo'}
@@ -67,16 +70,16 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={styles.userBar}>
+        <View style={[styles.userBar, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <View style={styles.userInfo}>
             <View style={styles.avatar}>
               <ThemedText style={styles.avatarText}>{(user?.name ?? 'U').slice(0, 2).toUpperCase()}</ThemedText>
             </View>
             <View>
-              <ThemedText type="defaultSemiBold" style={styles.userName}>
+              <ThemedText type="defaultSemiBold" style={[styles.userName, { color: palette.text }]}>
                 {user?.name ?? 'Usuario'}
               </ThemedText>
-              <ThemedText style={styles.userEmail}>{user?.email}</ThemedText>
+              <ThemedText style={[styles.userEmail, { color: palette.muted }]}>{user?.email}</ThemedText>
             </View>
           </View>
           <Pressable onPress={signOut} style={styles.logoutButton}>
@@ -87,7 +90,7 @@ export default function HomeScreen() {
         {loading ? (
           <View style={styles.loader}>
             <ActivityIndicator color={Brand.gold} />
-            <ThemedText style={styles.loaderText}>Sincronizando con el estudio...</ThemedText>
+            <ThemedText style={[styles.loaderText, { color: palette.muted }]}>Sincronizando con el estudio...</ThemedText>
           </View>
         ) : (
           <View style={styles.grid}>
@@ -122,9 +125,9 @@ export default function HomeScreen() {
           </View>
         )}
 
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
               Próximas citas
             </ThemedText>
             <Pressable onPress={loadDashboard}>
@@ -134,11 +137,11 @@ export default function HomeScreen() {
 
           {(dashboard?.data.next_appointments ?? []).length ? (
             (dashboard?.data.next_appointments ?? []).map((appointment) => (
-              <View key={String(appointment.id ?? Math.random())} style={styles.listItem}>
-                <ThemedText type="defaultSemiBold" style={styles.listTitle}>
+              <View key={String(appointment.id ?? Math.random())} style={[styles.listItem, { borderColor: palette.border, backgroundColor: palette.accent }]}>
+                <ThemedText type="defaultSemiBold" style={[styles.listTitle, { color: palette.text }]}>
                   {String(appointment.service?.nombre ?? 'Servicio')}
                 </ThemedText>
-                <ThemedText style={styles.listMeta}>
+                <ThemedText style={[styles.listMeta, { color: palette.muted }]}>
                   {String(appointment.fecha ?? '')} - {String(appointment.hora_inicio ?? '')}
                 </ThemedText>
               </View>
@@ -190,13 +193,10 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     padding: 24,
     gap: 12,
   },
   brand: {
-    color: '#fff',
     fontSize: 32,
     lineHeight: 36,
     fontWeight: '900',
@@ -206,7 +206,6 @@ const styles = StyleSheet.create({
     color: Brand.gold,
   },
   heroTitle: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '900',
     letterSpacing: 2,
@@ -216,9 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(212,175,55,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.2)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
@@ -239,8 +236,6 @@ const styles = StyleSheet.create({
   userBar: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -267,12 +262,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   userName: {
-    color: '#fff',
     fontSize: 15,
     fontWeight: '800',
   },
   userEmail: {
-    color: Brand.muted,
     fontSize: 11,
     marginTop: 2,
   },
@@ -290,14 +283,11 @@ const styles = StyleSheet.create({
     minHeight: 160,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Brand.bgCard,
     gap: 12,
   },
   loaderText: {
-    color: Brand.muted,
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -313,7 +303,6 @@ const styles = StyleSheet.create({
     minHeight: 110,
     borderRadius: 20,
     borderWidth: 1,
-    backgroundColor: Brand.bgCard,
     padding: 16,
     justifyContent: 'space-between',
   },
@@ -346,8 +335,6 @@ const styles = StyleSheet.create({
   sectionCard: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     padding: 20,
     gap: 16,
   },
@@ -357,7 +344,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionTitle: {
-    color: '#fff',
     textTransform: 'uppercase',
     letterSpacing: 2,
     fontSize: 14,
@@ -373,24 +359,19 @@ const styles = StyleSheet.create({
   listItem: {
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
     padding: 16,
     gap: 4,
   },
   listTitle: {
-    color: '#fff',
     fontWeight: '800',
     fontSize: 14,
     textTransform: 'uppercase',
   },
   listMeta: {
-    color: Brand.muted,
     fontSize: 12,
     fontWeight: '600',
   },
   emptyState: {
-    color: Brand.muted,
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 20,

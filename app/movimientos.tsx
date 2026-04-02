@@ -4,12 +4,16 @@ import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, type InventoryMovementRecord } from '@/lib/api';
 
 export default function MovementsScreen() {
   const { token, user } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = baseStyles;
   const router = useRouter();
   const [movements, setMovements] = useState<InventoryMovementRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,12 +45,12 @@ export default function MovementsScreen() {
 
   if (!isStaff) {
     return (
-      <ThemedView style={styles.screen}>
+      <ThemedView style={[styles.screen, { backgroundColor: palette.background }] }>
         <View style={styles.restricted}>
-          <ThemedText type="title" style={styles.restrictedTitle}>Acceso restringido</ThemedText>
-          <ThemedText style={styles.restrictedCopy}>Movimientos es un modulo para administracion y recepcion.</ThemedText>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <ThemedText style={styles.backButtonText}>Volver</ThemedText>
+          <ThemedText type="title" style={[styles.restrictedTitle, { color: palette.text }]}>Acceso restringido</ThemedText>
+          <ThemedText style={[styles.restrictedCopy, { color: palette.muted }]}>Movimientos es un modulo para administracion y recepcion.</ThemedText>
+          <Pressable onPress={() => router.back()} style={[styles.backButton, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText style={[styles.backButtonText, { color: palette.text }]}>Volver</ThemedText>
           </Pressable>
         </View>
       </ThemedView>
@@ -54,60 +58,60 @@ export default function MovementsScreen() {
   }
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }] }>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <ThemedText type="title" style={styles.title}>Movimientos</ThemedText>
-          <ThemedText style={styles.subtitle}>Registro de entradas y salidas de inventario sincronizado con la web.</ThemedText>
+        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <ThemedText type="title" style={[styles.title, { color: palette.text }]}>Movimientos</ThemedText>
+          <ThemedText style={[styles.subtitle, { color: palette.muted }]}>Registro de entradas y salidas de inventario sincronizado con la web.</ThemedText>
         </View>
 
         <View style={styles.summaryRow}>
-          <SummaryCard label="Movimientos" value={String(movements.length)} />
-          <SummaryCard label="Entradas" value={String(movements.filter((movement) => (movement.tipo ?? '').includes('entrada')).length)} accent />
-          <SummaryCard label="Salidas" value={String(movements.filter((movement) => (movement.tipo ?? '').includes('salida')).length)} />
+          <SummaryCard styles={styles} palette={palette} label="Movimientos" value={String(movements.length)} />
+          <SummaryCard styles={styles} palette={palette} label="Entradas" value={String(movements.filter((movement) => (movement.tipo ?? '').includes('entrada')).length)} accent />
+          <SummaryCard styles={styles} palette={palette} label="Salidas" value={String(movements.filter((movement) => (movement.tipo ?? '').includes('salida')).length)} />
         </View>
 
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>Bitacora</ThemedText>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>Bitacora</ThemedText>
             <Pressable onPress={loadMovements}>
               <ThemedText style={styles.refresh}>Actualizar</ThemedText>
             </Pressable>
           </View>
 
           {loading ? (
-            <View style={styles.loader}>
-              <ActivityIndicator color={Brand.gold} />
-              <ThemedText style={styles.loaderText}>Cargando movimientos...</ThemedText>
+            <View style={[styles.loader, { borderColor: palette.border, backgroundColor: palette.card }]}>
+              <ActivityIndicator color={palette.tint} />
+              <ThemedText style={[styles.loaderText, { color: palette.muted }]}>Cargando movimientos...</ThemedText>
             </View>
           ) : error ? (
-            <ThemedText style={styles.error}>{error}</ThemedText>
+            <ThemedText style={[styles.error, { color: palette.error }]}>{error}</ThemedText>
           ) : movements.length ? movements.map((movement) => (
-            <View key={String(movement.id)} style={styles.movementCard}>
+            <View key={String(movement.id)} style={[styles.movementCard, { borderColor: palette.border, backgroundColor: palette.accent }]}>
               <View style={styles.movementHeader}>
                 <View style={styles.movementTitleWrap}>
-                  <ThemedText type="defaultSemiBold" style={styles.movementTitle}>
+                  <ThemedText type="defaultSemiBold" style={[styles.movementTitle, { color: palette.text }]}>
                     {movement.product?.nombre ?? 'Producto'}
                   </ThemedText>
-                  <ThemedText style={styles.movementMeta}>
+                  <ThemedText style={[styles.movementMeta, { color: palette.muted }]}>
                     Usuario: {movement.user?.name ?? 'Sistema'}
                   </ThemedText>
                 </View>
-                <ThemedText style={styles.movementType}>{movement.tipo ?? 'movimiento'}</ThemedText>
+                <ThemedText style={[styles.movementType, { color: palette.tint }]}>{movement.tipo ?? 'movimiento'}</ThemedText>
               </View>
 
-              <ThemedText style={styles.movementMetaRow}>
+              <ThemedText style={[styles.movementMetaRow, { color: palette.tint }]}>
                 Cantidad: {movement.cantidad ?? 0} · {movement.fecha ?? ''}
               </ThemedText>
-              {movement.motivo ? <ThemedText style={styles.movementCopy}>{movement.motivo}</ThemedText> : null}
+              {movement.motivo ? <ThemedText style={[styles.movementCopy, { color: palette.text }]}>{movement.motivo}</ThemedText> : null}
               {movement.appointment?.id ? (
-                <ThemedText style={styles.movementLink}>
+                <ThemedText style={[styles.movementLink, { color: palette.text }]}>
                   Ligado a cita #{movement.appointment.id} · {movement.appointment.client ?? 'Cliente'}
                 </ThemedText>
               ) : null}
             </View>
           )) : (
-            <ThemedText style={styles.empty}>No hay movimientos registrados.</ThemedText>
+            <ThemedText style={[styles.empty, { color: palette.muted }]}>No hay movimientos registrados.</ThemedText>
           )}
         </View>
       </ScrollView>
@@ -115,16 +119,16 @@ export default function MovementsScreen() {
   );
 }
 
-function SummaryCard({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function SummaryCard({ label, value, accent = false, palette, styles }: { label: string; value: string; accent?: boolean; palette: typeof Colors.light; styles: typeof baseStyles }) {
   return (
-    <View style={[styles.summaryCard, accent ? styles.summaryCardAccent : null]}>
-      <ThemedText style={styles.summaryLabel}>{label}</ThemedText>
-      <ThemedText style={[styles.summaryValue, accent ? styles.summaryValueAccent : null]}>{value}</ThemedText>
+    <View style={[styles.summaryCard, { borderColor: palette.border, backgroundColor: palette.card }, accent ? { borderColor: palette.goldSoftBorder, backgroundColor: palette.goldSoftBackground } : null]}>
+      <ThemedText style={[styles.summaryLabel, { color: palette.muted }]}>{label}</ThemedText>
+      <ThemedText style={[styles.summaryValue, { color: palette.text }, accent ? styles.summaryValueAccent : null]}>{value}</ThemedText>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Brand.bgMain },
   content: { padding: 20, paddingBottom: 32, gap: 14 },
   hero: {

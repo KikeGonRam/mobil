@@ -4,7 +4,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View }
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, ApiError, type AppointmentRecord, type PaymentRecord } from '@/lib/api';
 import { useRouter } from 'expo-router';
 
@@ -12,6 +13,9 @@ const PAYMENT_METHODS: ('efectivo' | 'tarjeta' | 'transferencia' | 'qr')[] = ['e
 
 export default function PaymentsScreen() {
   const { token, user } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const router = useRouter();
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
@@ -123,9 +127,9 @@ export default function PaymentsScreen() {
         </View>
 
         <View style={styles.summaryRow}>
-          <SummaryCard label="Pagos" value={String(payments.length)} />
-          <SummaryCard label="Citas" value={String(appointments.length)} />
-          <SummaryCard label="Metodo" value={method} accent />
+          <SummaryCard styles={styles} label="Pagos" value={String(payments.length)} />
+          <SummaryCard styles={styles} label="Citas" value={String(appointments.length)} />
+          <SummaryCard styles={styles} label="Metodo" value={method} accent />
         </View>
 
         <View style={styles.sectionCard}>
@@ -215,7 +219,7 @@ export default function PaymentsScreen() {
           <ThemedText type="subtitle" style={styles.sectionTitle}>Pagos recientes</ThemedText>
           {loading ? (
             <View style={styles.loader}>
-              <ActivityIndicator color={Brand.gold} />
+              <ActivityIndicator color={palette.tint} />
             </View>
           ) : payments.length ? payments.map((payment) => (
             <View key={String(payment.id)} style={styles.paymentCard}>
@@ -244,7 +248,7 @@ export default function PaymentsScreen() {
   );
 }
 
-function SummaryCard({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function SummaryCard({ label, value, accent = false, styles }: { label: string; value: string; accent?: boolean; styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={[styles.summaryCard, accent ? styles.summaryCardAccent : null]}>
       <ThemedText style={styles.summaryLabel}>{label}</ThemedText>
@@ -253,26 +257,27 @@ function SummaryCard({ label, value, accent = false }: { label: string; value: s
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Brand.bgMain },
+function createStyles(palette: typeof Colors.light) {
+  return StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 20, paddingBottom: 32, gap: 14 },
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
   },
-  title: { color: '#fff', fontSize: 28, lineHeight: 32, fontWeight: '900' },
-  subtitle: { marginTop: 8, color: Brand.muted, lineHeight: 22 },
+  title: { color: palette.text, fontSize: 28, lineHeight: 32, fontWeight: '900' },
+  subtitle: { marginTop: 8, color: palette.muted, lineHeight: 22 },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   summaryCard: {
     width: '31%',
     minWidth: 96,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 12,
     gap: 4,
   },
@@ -280,27 +285,27 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212,175,55,0.3)',
     backgroundColor: 'rgba(212,175,55,0.08)',
   },
-  summaryLabel: { color: Brand.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
-  summaryValue: { color: '#fff', fontSize: 20, fontWeight: '900' },
-  summaryValueAccent: { color: Brand.gold },
+  summaryLabel: { color: palette.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
+  summaryValue: { color: palette.text, fontSize: 20, fontWeight: '900' },
+  summaryValueAccent: { color: palette.tint },
   sectionCard: {
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 16,
     gap: 12,
   },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { color: '#fff', textTransform: 'uppercase', letterSpacing: 1.5 },
-  refresh: { color: Brand.gold, textTransform: 'uppercase', fontSize: 12, fontWeight: '800' },
+  sectionTitle: { color: palette.text, textTransform: 'uppercase', letterSpacing: 1.5 },
+  refresh: { color: palette.tint, textTransform: 'uppercase', fontSize: 12, fontWeight: '800' },
   error: { color: '#f87171' },
   selectorList: { gap: 10 },
   selectorCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
     padding: 12,
     gap: 4,
   },
@@ -309,17 +314,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(212,175,55,0.08)',
   },
   selectorHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  selectorTitle: { color: '#fff', flex: 1 },
-  selectorPrice: { color: Brand.gold, fontWeight: '900' },
-  selectorMeta: { color: Brand.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
+  selectorTitle: { color: palette.text, flex: 1 },
+  selectorPrice: { color: palette.tint, fontWeight: '900' },
+  selectorMeta: { color: palette.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
   field: { gap: 6 },
-  label: { color: Brand.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
+  label: { color: palette.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
   input: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
-    color: '#fff',
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
+    color: palette.text,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
@@ -327,8 +332,8 @@ const styles = StyleSheet.create({
   methodButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
@@ -336,11 +341,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212,175,55,0.3)',
     backgroundColor: 'rgba(212,175,55,0.08)',
   },
-  methodText: { color: Brand.muted, textTransform: 'uppercase', fontWeight: '800', fontSize: 10 },
-  methodTextActive: { color: Brand.gold },
+  methodText: { color: palette.muted, textTransform: 'uppercase', fontWeight: '800', fontSize: 10 },
+  methodTextActive: { color: palette.tint },
   submitButton: {
     borderRadius: 14,
-    backgroundColor: Brand.gold,
+    backgroundColor: palette.tint,
     alignItems: 'center',
     paddingVertical: 14,
   },
@@ -349,35 +354,36 @@ const styles = StyleSheet.create({
   paymentCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
     padding: 14,
     gap: 4,
   },
   paymentHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   paymentTitleWrap: { flex: 1 },
-  paymentTitle: { color: '#fff' },
-  paymentMeta: { color: Brand.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
-  paymentAmount: { color: Brand.gold, fontWeight: '900', fontSize: 18 },
-  paymentMetaRow: { color: Brand.muted, fontSize: 11 },
-  receiptHint: { color: '#e5e5e5', fontSize: 12 },
-  empty: { color: Brand.muted, fontStyle: 'italic' },
+  paymentTitle: { color: palette.text },
+  paymentMeta: { color: palette.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
+  paymentAmount: { color: palette.tint, fontWeight: '900', fontSize: 18 },
+  paymentMetaRow: { color: palette.muted, fontSize: 11 },
+  receiptHint: { color: palette.text, fontSize: 12 },
+  empty: { color: palette.muted, fontStyle: 'italic' },
   restricted: {
     flex: 1,
     padding: 24,
     justifyContent: 'center',
     gap: 12,
   },
-  restrictedTitle: { color: '#fff', fontSize: 28 },
-  restrictedCopy: { color: Brand.muted, lineHeight: 22 },
+  restrictedTitle: { color: palette.text, fontSize: 28 },
+  restrictedCopy: { color: palette.muted, lineHeight: 22 },
   backButton: {
     alignSelf: 'flex-start',
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  backButtonText: { color: '#fff', textTransform: 'uppercase', fontWeight: '800', fontSize: 11 },
-});
+  backButtonText: { color: palette.text, textTransform: 'uppercase', fontWeight: '800', fontSize: 11 },
+  });
+}

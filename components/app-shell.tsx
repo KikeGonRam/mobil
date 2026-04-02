@@ -5,7 +5,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View 
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand, Colors } from '@/constants/theme';
+import { Brand, Colors, getBrand } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { useThemeMode } from '@/contexts/theme-context';
 
@@ -52,6 +52,9 @@ export function AppShell({ children }: PropsWithChildren) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const normalizedPath = normalizePath(pathname);
   const palette = Colors[resolvedMode];
+  const brand = getBrand(resolvedMode);
+
+  const styles = useMemo(() => createAppShellStyles(brand, resolvedMode === 'dark'), [brand, resolvedMode]);
 
   const isAuthenticatedView = !PUBLIC_ROUTES.has(normalizedPath);
   const isDesktopWeb = Platform.OS === 'web' && width >= 1024;
@@ -69,8 +72,8 @@ export function AppShell({ children }: PropsWithChildren) {
   }
 
   return (
-    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
-      <View style={[styles.shell, isDesktopWeb ? styles.shellDesktop : styles.shellMobile]}>
+    <ThemedView style={[baseStyles.screen, { backgroundColor: palette.background }]}>
+      <View style={[baseStyles.shell, isDesktopWeb ? baseStyles.shellDesktop : baseStyles.shellMobile]}>
         {isDesktopWeb ? (
           <Sidebar
             title={currentTitle}
@@ -80,11 +83,13 @@ export function AppShell({ children }: PropsWithChildren) {
             userEmail={user?.email ?? ''}
             onSignOut={signOut}
             onNavigate={() => undefined}
+            styles={styles}
+            brand={brand}
           />
         ) : !isChatRoute ? (
           <View style={styles.mobileTopBar}>
             <Pressable onPress={() => setDrawerOpen(true)} style={styles.menuButton}>
-              <MaterialCommunityIcons name="menu" size={24} color="#fff" />
+              <MaterialCommunityIcons name="menu" size={24} color={brand.gold} />
             </Pressable>
             <View style={styles.mobileTopCopy}>
               <ThemedText style={styles.mobileTitle}>{currentTitle}</ThemedText>
@@ -95,17 +100,17 @@ export function AppShell({ children }: PropsWithChildren) {
 
         <View
           style={[
-            styles.main,
-            isDesktopWeb ? styles.mainDesktop : styles.mainMobile,
-            isChatRoute ? styles.mainChatRoute : null,
+            baseStyles.main,
+            isDesktopWeb ? baseStyles.mainDesktop : baseStyles.mainMobile,
+            isChatRoute ? baseStyles.mainChatRoute : null,
           ]}>
-          <View style={styles.mainContent}>{children}</View>
+          <View style={baseStyles.mainContent}>{children}</View>
         </View>
       </View>
 
       {!isDesktopWeb && drawerOpen && !isChatRoute ? (
-        <View style={styles.drawerOverlay}>
-          <Pressable style={styles.drawerBackdrop} onPress={() => setDrawerOpen(false)} />
+        <View style={baseStyles.drawerOverlay}>
+          <Pressable style={baseStyles.drawerBackdrop} onPress={() => setDrawerOpen(false)} />
           <Sidebar
             title={currentTitle}
             primaryRole={primaryRole}
@@ -115,6 +120,8 @@ export function AppShell({ children }: PropsWithChildren) {
             onSignOut={signOut}
             onNavigate={() => setDrawerOpen(false)}
             compact
+            styles={styles}
+            brand={brand}
           />
         </View>
       ) : null}
@@ -245,6 +252,8 @@ function Sidebar({
   onSignOut,
   onNavigate,
   compact = false,
+  styles,
+  brand,
 }: {
   title: string;
   primaryRole: string;
@@ -254,6 +263,8 @@ function Sidebar({
   onSignOut: () => void;
   onNavigate: () => void;
   compact?: boolean;
+  styles: ReturnType<typeof createAppShellStyles>;
+  brand: ReturnType<typeof getBrand>;
 }) {
   const pathname = normalizePath(usePathname());
 
@@ -297,7 +308,7 @@ function Sidebar({
                     <MaterialCommunityIcons
                       name={ICONS[item.icon]}
                       size={18}
-                      color={active ? Brand.gold : '#9aa0a6'}
+                      color={active ? brand.gold : brand.muted}
                     />
                     <ThemedText style={[styles.navItemText, active ? styles.navItemTextActive : null]}>
                       {item.title}
@@ -322,7 +333,7 @@ function Sidebar({
         </View>
 
         <Pressable onPress={onSignOut} style={styles.logoutButton}>
-          <MaterialCommunityIcons name="logout" size={18} color={Brand.gold} />
+          <MaterialCommunityIcons name="logout" size={18} color={brand.gold} />
           <ThemedText style={styles.logoutText}>Cerrar sesión</ThemedText>
         </Pressable>
       </View>
@@ -372,7 +383,310 @@ function normalizePath(pathname: string) {
   return pathname.replace('/(tabs)', '');
 }
 
-const styles = StyleSheet.create({
+function createAppShellStyles(brand: ReturnType<typeof getBrand>, isDark: boolean) {
+  const bgAccentRgb = isDark ? '212,175,55' : '212,175,55';
+  const borderWidth = isDark ? 1 : 2;
+  
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
+    shell: {
+      flex: 1,
+    },
+    shellDesktop: {
+      flexDirection: 'row',
+    },
+    shellMobile: {
+      flexDirection: 'column',
+    },
+    sidebar: {
+      backgroundColor: brand.bgCard,
+      borderColor: brand.line,
+      borderWidth: borderWidth,
+    },
+    sidebarDesktop: {
+      width: 320,
+      margin: 16,
+      borderRadius: 28,
+      padding: 16,
+    },
+    sidebarCompact: {
+      position: 'absolute',
+      top: 12,
+      left: 12,
+      bottom: 12,
+      width: 320,
+      borderRadius: 28,
+      padding: 16,
+      zIndex: 30,
+      elevation: 24,
+      shadowColor: '#000',
+      shadowOpacity: 0.4,
+      shadowRadius: 24,
+      shadowOffset: { width: 0, height: 10 },
+    },
+    sidebarHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 12,
+    },
+    brandMark: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: brand.gold,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    brandTitle: {
+      color: brand.text,
+      fontSize: 18,
+      fontWeight: '900',
+    },
+    brandSubtitle: {
+      color: brand.muted,
+      fontSize: 10,
+      textTransform: 'uppercase',
+      letterSpacing: 1.4,
+      fontWeight: '800',
+    },
+    currentTitleWrap: {
+      borderRadius: 16,
+      borderWidth: borderWidth,
+      borderColor: brand.line,
+      backgroundColor: brand.bgAccent,
+      padding: 12,
+      marginBottom: 12,
+    },
+    currentTitleLabel: {
+      color: brand.muted,
+      textTransform: 'uppercase',
+      fontSize: 10,
+      letterSpacing: 1,
+      marginBottom: 4,
+      fontWeight: '700',
+    },
+    currentTitleValue: {
+      color: brand.text,
+      fontWeight: '700',
+    },
+    sidebarContent: {
+      gap: 12,
+      paddingBottom: 16,
+    },
+    roleBanner: {
+      borderRadius: 18,
+      borderWidth: borderWidth,
+      borderColor: `rgba(${bgAccentRgb},0.4)`,
+      backgroundColor: `rgba(${bgAccentRgb},0.12)`,
+      padding: 12,
+      marginBottom: 12,
+    },
+    roleBannerLabel: {
+      color: brand.muted,
+      textTransform: 'uppercase',
+      fontSize: 10,
+      letterSpacing: 1,
+      marginBottom: 3,
+      fontWeight: '700',
+    },
+    roleBannerValue: {
+      color: brand.gold,
+      textTransform: 'capitalize',
+      fontWeight: '900',
+    },
+    sectionBlock: {
+      gap: 8,
+      borderRadius: 18,
+      borderWidth: borderWidth,
+      borderColor: brand.line,
+      backgroundColor: brand.bgAccent,
+      padding: 12,
+    },
+    sectionLabel: {
+      color: brand.gold,
+      textTransform: 'uppercase',
+      fontSize: 11,
+      fontWeight: '900',
+      letterSpacing: 1.4,
+    },
+    sectionItems: {
+      gap: 6,
+    },
+    navItem: {
+      borderRadius: 16,
+      borderWidth: borderWidth,
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+      paddingHorizontal: 12,
+      paddingVertical: 11,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    navItemActive: {
+      backgroundColor: `rgba(${bgAccentRgb},0.12)`,
+      borderColor: brand.gold,
+    },
+    navItemText: {
+      color: brand.muted,
+      fontWeight: '700',
+    },
+    navItemTextActive: {
+      color: brand.text,
+      fontWeight: '900',
+    },
+    sidebarFooter: {
+      gap: 10,
+      borderTopWidth: borderWidth,
+      borderTopColor: brand.line,
+      paddingTop: 12,
+    },
+    userCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    userAvatar: {
+      width: 42,
+      height: 42,
+      borderRadius: 14,
+      backgroundColor: brand.bgAccent,
+      borderWidth: borderWidth,
+      borderColor: brand.line,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    userAvatarText: {
+      color: brand.gold,
+      fontWeight: '900',
+    },
+    userName: {
+      color: brand.text,
+      fontWeight: '700',
+    },
+    userEmail: {
+      color: brand.muted,
+      fontSize: 11,
+    },
+    logoutButton: {
+      borderRadius: 16,
+      borderWidth: borderWidth,
+      borderColor: brand.line,
+      backgroundColor: brand.bgAccent,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    logoutText: {
+      color: brand.text,
+      textTransform: 'uppercase',
+      fontWeight: '800',
+      fontSize: 11,
+    },
+    main: {
+      flex: 1,
+    },
+    mainDesktop: {
+      marginRight: 16,
+      marginTop: 16,
+      marginBottom: 16,
+    },
+    mainMobile: {
+      marginTop: 12,
+      marginHorizontal: 12,
+      marginBottom: 12,
+    },
+    mainChatRoute: {
+      marginTop: 0,
+      marginHorizontal: 0,
+      marginBottom: 0,
+    },
+    mainContent: {
+      flex: 1,
+    },
+    mobileTopBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingHorizontal: 12,
+      paddingTop: 12,
+      paddingBottom: 8,
+    },
+    mobileTopCopy: {
+      flex: 1,
+    },
+    mobileTitle: {
+      color: brand.text,
+      fontSize: 18,
+      fontWeight: '900',
+    },
+    mobileSubtitle: {
+      color: brand.muted,
+      fontSize: 11,
+      textTransform: 'uppercase',
+      letterSpacing: 1.1,
+      fontWeight: '800',
+    },
+    menuButton: {
+      width: 46,
+      height: 46,
+      borderRadius: 14,
+      backgroundColor: brand.bgCard,
+      borderWidth: borderWidth,
+      borderColor: brand.line,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    quickActionButton: {
+      width: 46,
+      height: 46,
+      borderRadius: 14,
+      backgroundColor: brand.gold,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    mobileChatFab: {
+      position: 'absolute',
+      right: 16,
+      bottom: 18,
+      borderRadius: 999,
+      backgroundColor: brand.gold,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      shadowColor: '#000',
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 10,
+      zIndex: 40,
+    },
+    mobileChatFabText: {
+      color: '#000',
+      textTransform: 'uppercase',
+      fontWeight: '900',
+      fontSize: 11,
+    },
+    drawerOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 20,
+    },
+    drawerBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.54)',
+    },
+  });
+}
+
+const baseStyles = StyleSheet.create({
   screen: {
     flex: 1,
   },
@@ -384,189 +698,6 @@ const styles = StyleSheet.create({
   },
   shellMobile: {
     flexDirection: 'column',
-  },
-  sidebar: {
-    backgroundColor: Brand.bgCard,
-    borderColor: Brand.line,
-    borderWidth: 1,
-  },
-  sidebarDesktop: {
-    width: 320,
-    margin: 16,
-    borderRadius: 28,
-    padding: 16,
-  },
-  sidebarCompact: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    bottom: 12,
-    width: 320,
-    borderRadius: 28,
-    padding: 16,
-    zIndex: 30,
-    elevation: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 10 },
-  },
-  sidebarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  brandMark: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: Brand.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  brandSubtitle: {
-    color: Brand.muted,
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1.4,
-    fontWeight: '800',
-  },
-  currentTitleWrap: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
-    padding: 12,
-    marginBottom: 12,
-  },
-  currentTitleLabel: {
-    color: Brand.muted,
-    textTransform: 'uppercase',
-    fontSize: 10,
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  currentTitleValue: {
-    color: '#fff',
-  },
-  sidebarContent: {
-    gap: 12,
-    paddingBottom: 16,
-  },
-  roleBanner: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.25)',
-    backgroundColor: 'rgba(212,175,55,0.1)',
-    padding: 12,
-    marginBottom: 12,
-  },
-  roleBannerLabel: {
-    color: Brand.muted,
-    textTransform: 'uppercase',
-    fontSize: 10,
-    letterSpacing: 1,
-    marginBottom: 3,
-  },
-  roleBannerValue: {
-    color: Brand.gold,
-    textTransform: 'capitalize',
-  },
-  sectionBlock: {
-    gap: 8,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
-    padding: 12,
-  },
-  sectionLabel: {
-    color: Brand.gold,
-    textTransform: 'uppercase',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1.4,
-  },
-  sectionItems: {
-    gap: 6,
-  },
-  navItem: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    backgroundColor: 'transparent',
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  navItemActive: {
-    backgroundColor: 'rgba(212,175,55,0.08)',
-    borderColor: 'rgba(212,175,55,0.25)',
-  },
-  navItemText: {
-    color: Brand.muted,
-    fontWeight: '700',
-  },
-  navItemTextActive: {
-    color: '#fff',
-  },
-  sidebarFooter: {
-    gap: 10,
-    borderTopWidth: 1,
-    borderTopColor: Brand.line,
-    paddingTop: 12,
-  },
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  userAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: Brand.bgAccent,
-    borderWidth: 1,
-    borderColor: Brand.line,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userAvatarText: {
-    color: Brand.gold,
-    fontWeight: '900',
-  },
-  userName: {
-    color: '#fff',
-  },
-  userEmail: {
-    color: Brand.muted,
-    fontSize: 11,
-  },
-  logoutButton: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  logoutText: {
-    color: '#fff',
-    textTransform: 'uppercase',
-    fontWeight: '800',
-    fontSize: 11,
   },
   main: {
     flex: 1,
@@ -588,71 +719,6 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
-  },
-  mobileTopBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  mobileTopCopy: {
-    flex: 1,
-  },
-  mobileTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  mobileSubtitle: {
-    color: Brand.muted,
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 1.1,
-    fontWeight: '800',
-  },
-  menuButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: Brand.bgCard,
-    borderWidth: 1,
-    borderColor: Brand.line,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: Brand.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mobileChatFab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 18,
-    borderRadius: 999,
-    backgroundColor: Brand.gold,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 10,
-    zIndex: 40,
-  },
-  mobileChatFabText: {
-    color: '#000',
-    textTransform: 'uppercase',
-    fontWeight: '900',
-    fontSize: 11,
   },
   drawerOverlay: {
     ...StyleSheet.absoluteFillObject,

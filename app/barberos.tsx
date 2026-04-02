@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { api, type BarberRecord } from '@/lib/api';
+import { useThemeMode } from '@/contexts/theme-context';
 
 export default function BarbersScreen() {
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const [barbers, setBarbers] = useState<BarberRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,9 +42,9 @@ export default function BarbersScreen() {
         </View>
 
         <View style={styles.summaryRow}>
-          <SummaryCard label="Barberos" value={String(barbers.length)} />
-          <SummaryCard label="Perfiles" value={String(barbers.filter((barber) => Boolean(barber.descripcion)).length)} accent />
-          <SummaryCard label="Especialidades" value={String(barbers.filter((barber) => Boolean(barber.especialidades)).length)} />
+          <SummaryCard styles={styles} label="Barberos" value={String(barbers.length)} />
+          <SummaryCard styles={styles} label="Perfiles" value={String(barbers.filter((barber) => Boolean(barber.descripcion)).length)} accent />
+          <SummaryCard styles={styles} label="Especialidades" value={String(barbers.filter((barber) => Boolean(barber.especialidades)).length)} />
         </View>
 
         <View style={styles.sectionCard}>
@@ -53,7 +57,7 @@ export default function BarbersScreen() {
 
           {loading ? (
             <View style={styles.loader}>
-              <ActivityIndicator color={Brand.gold} />
+              <ActivityIndicator color={palette.tint} />
               <ThemedText style={styles.loaderText}>Cargando barberos...</ThemedText>
             </View>
           ) : error ? (
@@ -78,7 +82,7 @@ export default function BarbersScreen() {
   );
 }
 
-function SummaryCard({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function SummaryCard({ label, value, accent = false, styles }: { label: string; value: string; accent?: boolean; styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={[styles.summaryCard, accent ? styles.summaryCardAccent : null]}>
       <ThemedText style={styles.summaryLabel}>{label}</ThemedText>
@@ -96,52 +100,53 @@ function initials(name: string) {
     .join('') || 'BR';
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Brand.bgMain },
+function createStyles(palette: typeof Colors.light) {
+  return StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 20, paddingBottom: 32, gap: 14 },
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
   },
-  title: { color: '#fff', fontSize: 28, lineHeight: 32, fontWeight: '900' },
-  subtitle: { marginTop: 8, color: Brand.muted, lineHeight: 22 },
+  title: { color: palette.text, fontSize: 28, lineHeight: 32, fontWeight: '900' },
+  subtitle: { marginTop: 8, color: palette.muted, lineHeight: 22 },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   summaryCard: {
     width: '31%',
     minWidth: 96,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 12,
     gap: 4,
   },
   summaryCardAccent: {
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: 'rgba(212,175,55,0.08)',
+    borderColor: palette.goldSoftBorder,
+    backgroundColor: palette.goldSoftBackground,
   },
-  summaryLabel: { color: Brand.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
-  summaryValue: { color: '#fff', fontSize: 20, fontWeight: '900' },
-  summaryValueAccent: { color: Brand.gold },
+  summaryLabel: { color: palette.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
+  summaryValue: { color: palette.text, fontSize: 20, fontWeight: '900' },
+  summaryValueAccent: { color: palette.tint },
   sectionCard: {
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 16,
     gap: 12,
   },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { color: '#fff', textTransform: 'uppercase', letterSpacing: 1.5 },
-  refresh: { color: Brand.gold, textTransform: 'uppercase', fontSize: 12, fontWeight: '800' },
+  sectionTitle: { color: palette.text, textTransform: 'uppercase', letterSpacing: 1.5 },
+  refresh: { color: palette.tint, textTransform: 'uppercase', fontSize: 12, fontWeight: '800' },
   barberCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
     padding: 14,
     flexDirection: 'row',
     gap: 12,
@@ -150,25 +155,26 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: Brand.gold,
+    backgroundColor: palette.tint,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: '#000', fontWeight: '900' },
+  avatarText: { color: palette.background, fontWeight: '900' },
   barberBody: { flex: 1, gap: 4 },
-  barberName: { color: '#fff' },
-  barberMeta: { color: Brand.gold, textTransform: 'uppercase', fontSize: 11, letterSpacing: 1 },
-  barberCopy: { color: '#e8e8e8', lineHeight: 20 },
+  barberName: { color: palette.text },
+  barberMeta: { color: palette.tint, textTransform: 'uppercase', fontSize: 11, letterSpacing: 1 },
+  barberCopy: { color: palette.text, lineHeight: 20 },
   loader: {
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
     alignItems: 'center',
     gap: 10,
   },
-  loaderText: { color: Brand.muted },
+  loaderText: { color: palette.muted },
   error: { color: '#fca5a5', lineHeight: 22 },
-  empty: { color: Brand.muted, fontStyle: 'italic' },
-});
+  empty: { color: palette.muted, fontStyle: 'italic' },
+  });
+}

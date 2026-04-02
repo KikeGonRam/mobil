@@ -70,9 +70,14 @@ function RootNavigator() {
       <Stack.Screen name="reportes" />
       <Stack.Screen name="configuracion" />
       <Stack.Screen name="usuarios" />
+      <Stack.Screen name="barberos" />
+      <Stack.Screen name="servicios" />
+      <Stack.Screen name="citas" />
       <Stack.Screen name="clientes" />
       <Stack.Screen name="inventario" />
+      <Stack.Screen name="movimientos" />
       <Stack.Screen name="pagos" />
+      <Stack.Screen name="logs" />
       <Stack.Screen name="chat" options={{ presentation: 'transparentModal', animation: 'fade', headerShown: false }} />
       <Stack.Screen name="appointments/[id]" />
       <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />

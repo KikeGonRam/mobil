@@ -24,6 +24,7 @@ export default function SettingsScreen() {
 
         <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <Row
+            palette={palette}
             label="Tema de la aplicacion"
             value={mode}
             action={
@@ -33,11 +34,13 @@ export default function SettingsScreen() {
             }
           />
           <Row
+            palette={palette}
             label="Notificaciones internas"
             value={notifications ? 'Activadas' : 'Desactivadas'}
             action={<Switch value={notifications} onValueChange={setNotifications} trackColor={{ true: Brand.gold, false: '#666' }} />}
           />
           <Row
+            palette={palette}
             label="Simular mantenimiento"
             value={maintenancePreview ? 'Activo' : 'Inactivo'}
             action={<Switch value={maintenancePreview} onValueChange={setMaintenancePreview} trackColor={{ true: Brand.gold, false: '#666' }} />}
@@ -46,7 +49,7 @@ export default function SettingsScreen() {
 
         <View style={[styles.notice, { borderColor: 'rgba(212,175,55,0.3)', backgroundColor: resolvedNoticeBackground(palette.background) }]}>
           <ThemedText style={styles.noticeTitle}>Nota tecnica</ThemedText>
-          <ThemedText style={styles.noticeCopy}>
+          <ThemedText style={[styles.noticeCopy, { color: palette.muted }]}>
             Para guardar configuraciones globales reales como en Laravel web, falta API dedicada para settings y maintenance toggle.
           </ThemedText>
         </View>
@@ -55,12 +58,12 @@ export default function SettingsScreen() {
   );
 }
 
-function Row({ label, value, action }: { label: string; value: string; action: ReactNode }) {
+function Row({ label, value, action, palette }: { label: string; value: string; action: ReactNode; palette: typeof Colors.light }) {
   return (
     <View style={styles.row}>
       <View style={styles.rowInfo}>
         <ThemedText style={styles.rowLabel}>{label}</ThemedText>
-        <ThemedText style={styles.rowValue}>{value}</ThemedText>
+        <ThemedText style={[styles.rowValue, { color: palette.muted }]}>{value}</ThemedText>
       </View>
       {action}
     </View>

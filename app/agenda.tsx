@@ -4,7 +4,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, ApiError, type AppointmentRecord } from '@/lib/api';
 
 type AgendaPeriod = 'day' | 'week';
@@ -22,6 +23,9 @@ const STATUS_OPTIONS: { value: AppointmentStatus; label: string }[] = [
 
 export default function AgendaScreen() {
   const { token, user } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const [period, setPeriod] = useState<AgendaPeriod>('day');
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -156,7 +160,7 @@ export default function AgendaScreen() {
 
         {loading ? (
           <View style={styles.loader}>
-            <ActivityIndicator color={Brand.gold} />
+            <ActivityIndicator color={palette.tint} />
             <ThemedText style={styles.loaderText}>Cargando agenda...</ThemedText>
           </View>
         ) : filteredAppointments.length ? (
@@ -211,10 +215,11 @@ export default function AgendaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(palette: typeof Colors.light) {
+  return StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Brand.bgMain,
+    backgroundColor: palette.background,
   },
   content: {
     padding: 20,
@@ -224,26 +229,26 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
   },
   title: {
-    color: '#fff',
+    color: palette.text,
     fontSize: 28,
     lineHeight: 32,
     fontWeight: '900',
   },
   subtitle: {
     marginTop: 8,
-    color: Brand.muted,
+    color: palette.muted,
     lineHeight: 22,
   },
   periodSwitch: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 6,
     flexDirection: 'row',
     gap: 8,
@@ -255,16 +260,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   periodButtonActive: {
-    backgroundColor: Brand.gold,
+    backgroundColor: palette.tint,
   },
   periodText: {
-    color: Brand.muted,
+    color: palette.muted,
     textTransform: 'uppercase',
     fontWeight: '800',
     fontSize: 11,
   },
   periodTextActive: {
-    color: '#000',
+    color: palette.background,
   },
   error: {
     color: '#f87171',
@@ -272,20 +277,20 @@ const styles = StyleSheet.create({
   loader: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
     alignItems: 'center',
     gap: 10,
   },
   loaderText: {
-    color: Brand.muted,
+    color: palette.muted,
   },
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 16,
     gap: 10,
   },
@@ -296,10 +301,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   clientName: {
-    color: '#fff',
+    color: palette.text,
   },
   serviceName: {
-    color: Brand.gold,
+    color: palette.tint,
     textTransform: 'uppercase',
     fontSize: 11,
     marginTop: 2,
@@ -308,19 +313,19 @@ const styles = StyleSheet.create({
   statusPill: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: 'rgba(212,175,55,0.08)',
+    borderColor: palette.goldSoftBorder,
+    backgroundColor: palette.goldSoftBackground,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   statusText: {
-    color: Brand.gold,
+    color: palette.tint,
     textTransform: 'uppercase',
     fontWeight: '800',
     fontSize: 10,
   },
   meta: {
-    color: Brand.muted,
+    color: palette.muted,
   },
   actions: {
     flexDirection: 'row',
@@ -335,22 +340,22 @@ const styles = StyleSheet.create({
   },
   primaryAction: {
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: Brand.gold,
+    borderColor: palette.goldSoftBorder,
+    backgroundColor: palette.tint,
   },
   secondaryAction: {
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
   },
   primaryActionText: {
-    color: '#000',
+    color: palette.background,
     textTransform: 'uppercase',
     fontWeight: '900',
     fontSize: 11,
   },
   secondaryActionText: {
-    color: '#fff',
+    color: palette.text,
     textTransform: 'uppercase',
     fontWeight: '800',
     fontSize: 11,
@@ -361,13 +366,14 @@ const styles = StyleSheet.create({
   emptyCard: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Brand.line,
+    borderColor: palette.border,
     borderStyle: 'dashed',
-    backgroundColor: Brand.bgCard,
+    backgroundColor: palette.card,
     padding: 20,
     alignItems: 'center',
   },
   emptyText: {
-    color: Brand.muted,
+    color: palette.muted,
   },
-});
+  });
+}

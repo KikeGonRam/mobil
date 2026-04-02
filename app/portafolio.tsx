@@ -1,15 +1,19 @@
 import { Image, Pressable, ScrollView, StyleSheet, View, ActivityIndicator, Alert } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, ApiError, type WorkRecord } from '@/lib/api';
 import { useRouter } from 'expo-router';
 
 export default function PortfolioScreen() {
   const { token, user } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const router = useRouter();
   const [works, setWorks] = useState<WorkRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,16 +60,16 @@ export default function PortfolioScreen() {
 
   if (!isBarber) {
     return (
-      <ThemedView style={styles.screen}>
+      <ThemedView style={[styles.screen, { backgroundColor: palette.background }] }>
         <View style={styles.notAllowed}>
-          <ThemedText type="title" style={styles.notAllowedTitle}>
+          <ThemedText type="title" style={[styles.notAllowedTitle, { color: palette.text }]}>
             Acceso restringido
           </ThemedText>
-          <ThemedText style={styles.notAllowedCopy}>
+          <ThemedText style={[styles.notAllowedCopy, { color: palette.muted }]}>
             Esta sección solo está disponible para barberos.
           </ThemedText>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <ThemedText style={styles.backButtonText}>Volver</ThemedText>
+          <Pressable onPress={() => router.back()} style={[styles.backButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
+            <ThemedText style={[styles.backButtonText, { color: palette.text }]}>Volver</ThemedText>
           </Pressable>
         </View>
       </ThemedView>
@@ -74,31 +78,31 @@ export default function PortfolioScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.screen}>
+      <ThemedView style={[styles.screen, { backgroundColor: palette.background }] }>
         <View style={styles.loader}>
-          <ActivityIndicator color={Brand.gold} size="large" />
-          <ThemedText style={styles.loaderText}>Cargando portafolio...</ThemedText>
+          <ActivityIndicator color={palette.tint} size="large" />
+          <ThemedText style={[styles.loaderText, { color: palette.muted }]}>Cargando portafolio...</ThemedText>
         </View>
       </ThemedView>
     );
   }
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }] }>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <ThemedText type="title" style={styles.title}>
+        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <ThemedText type="title" style={[styles.title, { color: palette.text }]}>
             Mi portafolio
           </ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
             Tus trabajos y realizaciones profesionales
           </ThemedText>
         </View>
 
         {apiUnavailable ? (
-          <View style={styles.noticeCard}>
-            <ThemedText style={styles.noticeTitle}>Portafolio en integracion</ThemedText>
-            <ThemedText style={styles.noticeCopy}>
+          <View style={[styles.noticeCard, { borderColor: palette.goldSoftBorder, backgroundColor: palette.goldSoftBackground }]}>
+            <ThemedText style={[styles.noticeTitle, { color: palette.tint }]}>Portafolio en integracion</ThemedText>
+            <ThemedText style={[styles.noticeCopy, { color: palette.text }]}>
               Esta vista ya existe en movil y web. Falta habilitar el endpoint en la API para sincronizar tus trabajos reales.
             </ThemedText>
           </View>
@@ -111,9 +115,9 @@ export default function PortfolioScreen() {
               const imageCount = work.images.length;
 
               return (
-                <View key={String(work.id)} style={styles.workCard}>
+                <View key={String(work.id)} style={[styles.workCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
                   {mainImage ? (
-                    <View style={styles.imageContainer}>
+                    <View style={[styles.imageContainer, { backgroundColor: palette.accent }]}>
                       <Image
                         source={{ uri: mainImage }}
                         style={styles.workImage}
@@ -126,21 +130,21 @@ export default function PortfolioScreen() {
                       )}
                     </View>
                   ) : (
-                    <View style={[styles.imageContainer, styles.noImage]}>
-                      <ThemedText style={styles.noImageText}>Sin imagen</ThemedText>
+                    <View style={[styles.imageContainer, styles.noImage, { backgroundColor: palette.accent }]}>
+                      <ThemedText style={[styles.noImageText, { color: palette.muted }]}>Sin imagen</ThemedText>
                     </View>
                   )}
 
                   <View style={styles.workInfo}>
-                    <ThemedText type="defaultSemiBold" style={styles.workTitle}>
+                    <ThemedText type="defaultSemiBold" style={[styles.workTitle, { color: palette.text }]}>
                       {work.title}
                     </ThemedText>
                     {work.description && (
-                      <ThemedText style={styles.workDescription} numberOfLines={2}>
+                      <ThemedText style={[styles.workDescription, { color: palette.muted }]} numberOfLines={2}>
                         {work.description}
                       </ThemedText>
                     )}
-                    <ThemedText style={styles.workDate}>
+                    <ThemedText style={[styles.workDate, { color: palette.muted }]}>
                       {new Date(work.work_date).toLocaleDateString('es-ES', {
                         day: 'numeric',
                         month: 'short',
@@ -155,13 +159,13 @@ export default function PortfolioScreen() {
         ) : (
           <View style={styles.emptyState}>
             <ThemedText style={styles.emptyStateIcon}>✂️</ThemedText>
-            <ThemedText type="subtitle" style={styles.emptyStateTitle}>
+            <ThemedText type="subtitle" style={[styles.emptyStateTitle, { color: palette.text }]}>
               Sin trabajos en el portafolio
             </ThemedText>
-            <ThemedText style={styles.emptyStateCopy}>
+            <ThemedText style={[styles.emptyStateCopy, { color: palette.muted }]}>
               Cuando subas tus primeros trabajos, aparecerán aquí.
             </ThemedText>
-            <ThemedText style={styles.emptyStateHint}>
+            <ThemedText style={[styles.emptyStateHint, { color: palette.tint }]}>
               Usa la versión web para subir nuevos trabajos.
             </ThemedText>
           </View>
@@ -183,18 +187,14 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     padding: 20,
   },
   title: {
-    color: '#fff',
     fontSize: 28,
     lineHeight: 32,
     fontWeight: '900',
   },
   subtitle: {
-    color: Brand.muted,
     marginTop: 8,
     lineHeight: 22,
   },
@@ -204,32 +204,25 @@ const styles = StyleSheet.create({
   noticeCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: 'rgba(212,175,55,0.08)',
     padding: 14,
     gap: 6,
   },
   noticeTitle: {
-    color: Brand.gold,
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '900',
     fontSize: 11,
   },
   noticeCopy: {
-    color: '#f1f1f1',
     lineHeight: 20,
   },
   workCard: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
     overflow: 'hidden',
   },
   imageContainer: {
     height: 200,
-    backgroundColor: Brand.bgAccent,
     position: 'relative',
   },
   workImage: {
@@ -241,7 +234,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   noImageText: {
-    color: Brand.muted,
     fontSize: 14,
     fontStyle: 'italic',
   },
@@ -255,7 +247,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   imageCountText: {
-    color: '#fff',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -264,16 +255,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   workTitle: {
-    color: '#fff',
     fontSize: 15,
   },
   workDescription: {
-    color: Brand.muted,
     fontSize: 13,
     lineHeight: 20,
   },
   workDate: {
-    color: Brand.muted,
     fontSize: 11,
     marginTop: 4,
   },
@@ -288,15 +276,12 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   emptyStateTitle: {
-    color: '#fff',
   },
   emptyStateCopy: {
-    color: Brand.muted,
     textAlign: 'center',
     maxWidth: 280,
   },
   emptyStateHint: {
-    color: Brand.gold,
     textAlign: 'center',
     fontSize: 13,
     marginTop: 8,
@@ -308,7 +293,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loaderText: {
-    color: Brand.muted,
   },
   notAllowed: {
     flex: 1,
@@ -318,10 +302,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   notAllowedTitle: {
-    color: '#fff',
   },
   notAllowedCopy: {
-    color: Brand.muted,
     textAlign: 'center',
   },
   backButton: {
@@ -330,13 +312,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
     paddingVertical: 14,
     paddingHorizontal: 32,
   },
   backButtonText: {
-    color: '#fff',
     fontWeight: '800',
     fontSize: 13,
     textTransform: 'uppercase',

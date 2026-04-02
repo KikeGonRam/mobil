@@ -9,11 +9,11 @@ const lineDark = '#262626';
 const mutedDark = '#a0a0a0';
 
 // Light Theme - Inspirado en una barbería moderna y luminosa
-const bgMainLight = '#ffffff';
-const bgCardLight = '#f8f8f8';
-const bgAccentLight = '#f0f0f0';
-const lineLight = '#e5e5e5';
-const mutedLight = '#666666';
+const bgMainLight = '#fafafa';
+const bgCardLight = '#f0f0f0';
+const bgAccentLight = '#e8e8e8';
+const lineLight = '#d0d0d0';
+const mutedLight = '#555555';
 
 export const Colors = {
   light: {
@@ -51,6 +51,33 @@ export const Brand = {
   line: lineDark,
   muted: mutedDark,
 };
+
+export function getBrand(mode: 'light' | 'dark') {
+  if (mode === 'light') {
+    return {
+      gold,
+      goldDim,
+      bgMain: bgMainLight,
+      bgCard: bgCardLight,
+      bgAccent: bgAccentLight,
+      line: lineLight,
+      muted: mutedLight,
+      text: '#000000',
+      textSecondary: '#333333',
+    };
+  }
+  return {
+    gold,
+    goldDim,
+    bgMain: bgMainDark,
+    bgCard: bgCardDark,
+    bgAccent: bgAccentDark,
+    line: lineDark,
+    muted: mutedDark,
+    text: '#ffffff',
+    textSecondary: '#e5e5e5',
+  };
+}
 
 export const Fonts = Platform.select({
   ios: {

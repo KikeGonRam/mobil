@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, ApiError, type NotificationRecord } from '@/lib/api';
 import { useRouter } from 'expo-router';
 
@@ -15,6 +16,8 @@ type NotificationWithMessage = NotificationRecord & {
 
 export default function NotificationsScreen() {
   const { token } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationWithMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,23 +76,23 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.screen}>
+      <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
         <View style={styles.loader}>
-          <ActivityIndicator color={Brand.gold} size="large" />
-          <ThemedText style={styles.loaderText}>Cargando notificaciones...</ThemedText>
+          <ActivityIndicator color={palette.tint} size="large" />
+          <ThemedText style={[styles.loaderText, { color: palette.muted }]}>Cargando notificaciones...</ThemedText>
         </View>
       </ThemedView>
     );
   }
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <ThemedText type="title" style={styles.title}>
+        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <ThemedText type="title" style={[styles.title, { color: palette.text }]}>
             Notificaciones
           </ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
             {unreadCount > 0
               ? `Tienes ${unreadCount} notificación${unreadCount !== 1 ? 'es' : ''} sin leer`
               : 'No tienes notificaciones sin leer'}
@@ -100,11 +103,11 @@ export default function NotificationsScreen() {
           <Pressable
             onPress={handleMarkAllRead}
             disabled={markingRead}
-            style={[styles.markReadButton, markingRead && styles.markReadButtonDisabled]}>
+            style={[styles.markReadButton, { borderColor: palette.goldSoftBorder, backgroundColor: palette.goldSoftBackground }, markingRead && styles.markReadButtonDisabled]}>
             {markingRead ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={palette.tint} size="small" />
             ) : (
-              <ThemedText style={styles.markReadButtonText}>Marcar todas como leídas</ThemedText>
+              <ThemedText style={[styles.markReadButtonText, { color: palette.tint }]}>Marcar todas como leídas</ThemedText>
             )}
           </Pressable>
         )}
@@ -126,30 +129,30 @@ export default function NotificationsScreen() {
                 onPress={() => handleNotificationPress(notification)}
                 style={[
                   styles.notificationCard,
-                  isUnread ? styles.notificationCardUnread : null,
+                  { borderColor: palette.border, backgroundColor: palette.card },
+                  isUnread ? { borderColor: palette.goldSoftBorder, backgroundColor: palette.goldSoftBackground } : null,
                 ]}>
                 <View style={styles.notificationHeader}>
                   <View
                     style={[
                       styles.notificationIcon,
                       {
-                        backgroundColor: isUnread
-                          ? 'rgba(212,175,55,0.15)'
-                          : 'rgba(176,176,176,0.1)',
+                        backgroundColor: isUnread ? palette.goldSoftBackground : palette.accent,
+                        borderColor: isUnread ? palette.goldSoftBorder : palette.border,
                       },
                     ]}>
-                    <ThemedText style={styles.notificationIconSymbol}>
+                    <ThemedText style={[styles.notificationIconSymbol, { color: palette.tint }]}>
                       {isUnread ? '●' : '○'}
                     </ThemedText>
                   </View>
                   <View style={styles.notificationContent}>
                     <ThemedText
                       type="defaultSemiBold"
-                      style={[styles.notificationTitle, isUnread && styles.notificationTitleUnread]}>
+                      style={[styles.notificationTitle, { color: palette.text }, isUnread && { color: palette.tint }]}>
                       {title}
                     </ThemedText>
-                    <ThemedText style={styles.notificationMessage}>{message}</ThemedText>
-                    <ThemedText style={styles.notificationDate}>
+                    <ThemedText style={[styles.notificationMessage, { color: palette.muted }]}>{message}</ThemedText>
+                    <ThemedText style={[styles.notificationDate, { color: palette.muted }]}>
                       {new Date(notification.created_at).toLocaleDateString('es-ES', {
                         day: 'numeric',
                         month: 'short',
@@ -166,10 +169,10 @@ export default function NotificationsScreen() {
         ) : (
           <View style={styles.emptyState}>
             <ThemedText style={styles.emptyStateIcon}>🔔</ThemedText>
-            <ThemedText type="subtitle" style={styles.emptyStateTitle}>
+            <ThemedText type="subtitle" style={[styles.emptyStateTitle, { color: palette.text }]}>
               Sin notificaciones
             </ThemedText>
-            <ThemedText style={styles.emptyStateCopy}>
+            <ThemedText style={[styles.emptyStateCopy, { color: palette.muted }]}>
               Cuando tengas notificaciones nuevas, aparecerán aquí.
             </ThemedText>
           </View>

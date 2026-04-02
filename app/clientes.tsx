@@ -3,8 +3,9 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View }
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, type ClientRecord } from '@/lib/api';
 import { useRouter } from 'expo-router';
 
@@ -16,6 +17,8 @@ const dateFormatter = new Intl.DateTimeFormat('es-MX', {
 
 export default function ClientsScreen() {
   const { token, user } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
   const router = useRouter();
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [queryInput, setQueryInput] = useState('');
@@ -58,14 +61,14 @@ export default function ClientsScreen() {
 
   if (!isStaff) {
     return (
-      <ThemedView style={styles.screen}>
+      <ThemedView style={[styles.screen, { backgroundColor: palette.background }] }>
         <View style={styles.restricted}>
-          <ThemedText type="title" style={styles.restrictedTitle}>Acceso restringido</ThemedText>
-          <ThemedText style={styles.restrictedCopy}>
+          <ThemedText type="title" style={[styles.restrictedTitle, { color: palette.text }]}>Acceso restringido</ThemedText>
+          <ThemedText style={[styles.restrictedCopy, { color: palette.muted }]}>
             Clientes es un modulo para administradores y recepcion.
           </ThemedText>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <ThemedText style={styles.backButtonText}>Volver</ThemedText>
+          <Pressable onPress={() => router.back()} style={[styles.backButton, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText style={[styles.backButtonText, { color: palette.text }]}>Volver</ThemedText>
           </Pressable>
         </View>
       </ThemedView>
@@ -73,23 +76,23 @@ export default function ClientsScreen() {
   }
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }] }>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <ThemedText type="title" style={styles.title}>Clientes</ThemedText>
-          <ThemedText style={styles.subtitle}>
+        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <ThemedText type="title" style={[styles.title, { color: palette.text }]}>Clientes</ThemedText>
+          <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
             Base de clientes sincronizada con el panel web y lista para soporte rapido.
           </ThemedText>
         </View>
 
         <View style={styles.summaryRow}>
-          <SummaryCard label="Clientes" value={String(meta.total)} />
-          <SummaryCard label="Con cita" value={String(clients.reduce((sum, client) => sum + (client.appointments_count ?? 0), 0))} accent />
-          <SummaryCard label="Notificaciones" value={String(notificationEnabledCount)} />
+          <SummaryCard palette={palette} label="Clientes" value={String(meta.total)} />
+          <SummaryCard palette={palette} label="Con cita" value={String(clients.reduce((sum, client) => sum + (client.appointments_count ?? 0), 0))} accent />
+          <SummaryCard palette={palette} label="Notificaciones" value={String(notificationEnabledCount)} />
         </View>
 
-        <View style={styles.filterCard}>
-          <ThemedText style={styles.filterLabel}>Buscar cliente</ThemedText>
+        <View style={[styles.filterCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <ThemedText style={[styles.filterLabel, { color: palette.muted }]}>Buscar cliente</ThemedText>
           <View style={styles.searchRow}>
             <TextInput
               value={queryInput}
@@ -101,27 +104,27 @@ export default function ClientsScreen() {
                 setPage(1);
                 setQuery(queryInput.trim());
               }}
-              style={styles.input}
+              style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
             />
             <Pressable
               onPress={() => {
                 setPage(1);
                 setQuery(queryInput.trim());
               }}
-              style={styles.searchButton}>
-              <ThemedText style={styles.searchButtonText}>Filtrar</ThemedText>
+              style={[styles.searchButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
+              <ThemedText style={[styles.searchButtonText, { color: palette.text }]}>Filtrar</ThemedText>
             </Pressable>
           </View>
         </View>
 
         {loading ? (
-          <View style={styles.loader}>
-            <ActivityIndicator color={Brand.gold} />
-            <ThemedText style={styles.loaderText}>Cargando clientes...</ThemedText>
+          <View style={[styles.loader, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ActivityIndicator color={palette.tint} />
+            <ThemedText style={[styles.loaderText, { color: palette.muted }]}>Cargando clientes...</ThemedText>
           </View>
         ) : error ? (
-          <View style={styles.noticeCard}>
-            <ThemedText style={styles.noticeText}>{error}</ThemedText>
+          <View style={[styles.noticeCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText style={[styles.noticeText, { color: palette.muted }]}>{error}</ThemedText>
           </View>
         ) : clients.length ? (
           <View style={styles.list}>
@@ -131,40 +134,41 @@ export default function ClientsScreen() {
                 .map(([key]) => key);
 
               return (
-                <View key={String(record.id)} style={styles.card}>
+                <View key={String(record.id)} style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
                   <View style={styles.cardHeader}>
-                    <View style={styles.avatar}>
-                      <ThemedText style={styles.avatarText}>{getInitials(record.user?.name ?? 'Cliente')}</ThemedText>
+                    <View style={[styles.avatar, { backgroundColor: palette.goldSoftBackground, borderColor: palette.goldSoftBorder }]}>
+                      <ThemedText style={[styles.avatarText, { color: palette.tint }]}>{getInitials(record.user?.name ?? 'Cliente')}</ThemedText>
                     </View>
                     <View style={styles.cardHeading}>
-                      <ThemedText type="defaultSemiBold" style={styles.name}>{record.user?.name ?? 'Sin usuario'}</ThemedText>
-                      <ThemedText style={styles.meta}>{record.user?.email ?? '-'}</ThemedText>
+                      <ThemedText type="defaultSemiBold" style={[styles.name, { color: palette.text }]}>{record.user?.name ?? 'Sin usuario'}</ThemedText>
+                      <ThemedText style={[styles.meta, { color: palette.muted }]}>{record.user?.email ?? '-'}</ThemedText>
                     </View>
                   </View>
 
                   <View style={styles.cardBody}>
                     <View style={styles.detailsRow}>
-                      <DetailBlock label="Telefono" value={record.telefono ?? 'No registrado'} />
+                      <DetailBlock palette={palette} label="Telefono" value={record.telefono ?? 'No registrado'} />
                       <DetailBlock
+                        palette={palette}
                         label="Nacimiento"
                         value={record.fecha_nacimiento ? formatDate(record.fecha_nacimiento) : 'N/A'}
                       />
                     </View>
 
                     <View style={styles.detailsRow}>
-                      <DetailBlock label="Citas" value={String(record.appointments_count ?? 0)} accent />
-                      <DetailBlock label="Registro" value={record.created_at ? formatDate(record.created_at) : 'N/A'} />
+                      <DetailBlock palette={palette} label="Citas" value={String(record.appointments_count ?? 0)} accent />
+                      <DetailBlock palette={palette} label="Registro" value={record.created_at ? formatDate(record.created_at) : 'N/A'} />
                     </View>
 
                     <View style={styles.badgeGroup}>
                       {enabledPrefs.length ? (
                         enabledPrefs.map((pref) => (
-                          <View key={pref} style={styles.roleBadge}>
-                            <ThemedText style={styles.roleBadgeText}>{pref}</ThemedText>
+                          <View key={pref} style={[styles.roleBadge, { borderColor: palette.border, backgroundColor: palette.accent }]}>
+                            <ThemedText style={[styles.roleBadgeText, { color: palette.text }]}>{pref}</ThemedText>
                           </View>
                         ))
                       ) : (
-                        <ThemedText style={styles.meta}>Sin preferencias activas</ThemedText>
+                        <ThemedText style={[styles.meta, { color: palette.muted }]}>Sin preferencias activas</ThemedText>
                       )}
                     </View>
                   </View>
@@ -173,8 +177,8 @@ export default function ClientsScreen() {
             })}
           </View>
         ) : (
-          <View style={styles.noticeCard}>
-            <ThemedText style={styles.noticeText}>No se encontraron clientes con los filtros actuales.</ThemedText>
+          <View style={[styles.noticeCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText style={[styles.noticeText, { color: palette.muted }]}>No se encontraron clientes con los filtros actuales.</ThemedText>
           </View>
         )}
 
@@ -182,17 +186,17 @@ export default function ClientsScreen() {
           <Pressable
             onPress={() => setPage((current) => Math.max(1, current - 1))}
             disabled={loading || meta.current_page <= 1}
-            style={[styles.pageButton, meta.current_page <= 1 ? styles.pageButtonDisabled : null]}>
-            <ThemedText style={styles.pageButtonText}>Anterior</ThemedText>
+            style={[styles.pageButton, { borderColor: palette.border, backgroundColor: palette.card }, meta.current_page <= 1 ? styles.pageButtonDisabled : null]}>
+            <ThemedText style={[styles.pageButtonText, { color: palette.text }]}>Anterior</ThemedText>
           </Pressable>
-          <ThemedText style={styles.pageInfo}>
+          <ThemedText style={[styles.pageInfo, { color: palette.muted }]}>
             Página {meta.current_page} de {meta.last_page}
           </ThemedText>
           <Pressable
             onPress={() => setPage((current) => Math.min(meta.last_page, current + 1))}
             disabled={loading || meta.current_page >= meta.last_page}
-            style={[styles.pageButton, meta.current_page >= meta.last_page ? styles.pageButtonDisabled : null]}>
-            <ThemedText style={styles.pageButtonText}>Siguiente</ThemedText>
+            style={[styles.pageButton, { borderColor: palette.border, backgroundColor: palette.card }, meta.current_page >= meta.last_page ? styles.pageButtonDisabled : null]}>
+            <ThemedText style={[styles.pageButtonText, { color: palette.text }]}>Siguiente</ThemedText>
           </Pressable>
         </View>
       </ScrollView>
@@ -200,20 +204,20 @@ export default function ClientsScreen() {
   );
 }
 
-function SummaryCard({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function SummaryCard({ label, value, accent = false, palette }: { label: string; value: string; accent?: boolean; palette: typeof Colors.light }) {
   return (
-    <View style={[styles.summaryCard, accent ? styles.summaryCardAccent : null]}>
-      <ThemedText style={styles.summaryLabel}>{label}</ThemedText>
-      <ThemedText style={[styles.summaryValue, accent ? styles.summaryValueAccent : null]}>{value}</ThemedText>
+    <View style={[styles.summaryCard, { borderColor: palette.border, backgroundColor: palette.card }, accent ? { borderColor: palette.goldSoftBorder, backgroundColor: palette.goldSoftBackground } : null]}>
+      <ThemedText style={[styles.summaryLabel, { color: palette.muted }]}>{label}</ThemedText>
+      <ThemedText style={[styles.summaryValue, { color: palette.text }, accent ? styles.summaryValueAccent : null]}>{value}</ThemedText>
     </View>
   );
 }
 
-function DetailBlock({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function DetailBlock({ label, value, accent = false, palette }: { label: string; value: string; accent?: boolean; palette: typeof Colors.light }) {
   return (
-    <View style={styles.detailBlock}>
-      <ThemedText style={styles.detailLabel}>{label}</ThemedText>
-      <ThemedText style={[styles.detailValue, accent ? styles.detailValueAccent : null]}>{value}</ThemedText>
+    <View style={[styles.detailBlock, { borderColor: palette.border, backgroundColor: palette.accent }]}>
+      <ThemedText style={[styles.detailLabel, { color: palette.muted }]}>{label}</ThemedText>
+      <ThemedText style={[styles.detailValue, { color: palette.text }, accent ? styles.detailValueAccent : null]}>{value}</ThemedText>
     </View>
   );
 }

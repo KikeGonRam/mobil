@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api } from '@/lib/api';
 
 type DashboardData = {
@@ -15,6 +16,9 @@ type DashboardData = {
 
 export default function ReportsScreen() {
   const { token } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState<Record<string, number | string | null | undefined>>({});
 
@@ -46,14 +50,14 @@ export default function ReportsScreen() {
 
         {loading ? (
           <View style={styles.loader}>
-            <ActivityIndicator color={Brand.gold} />
+            <ActivityIndicator color={palette.tint} />
           </View>
         ) : (
           <View style={styles.grid}>
-            <Kpi label="Citas hoy" value={String(kpis.appointments_today ?? 0)} />
-            <Kpi label="Ingresos hoy" value={`$${Number(kpis.income_today ?? 0).toFixed(2)}`} />
-            <Kpi label="Semana" value={`$${Number(kpis.income_week ?? 0).toFixed(2)}`} />
-            <Kpi label="Clientes" value={String(kpis.new_clients ?? 0)} />
+            <Kpi styles={styles} label="Citas hoy" value={String(kpis.appointments_today ?? 0)} />
+            <Kpi styles={styles} label="Ingresos hoy" value={`$${Number(kpis.income_today ?? 0).toFixed(2)}`} />
+            <Kpi styles={styles} label="Semana" value={`$${Number(kpis.income_week ?? 0).toFixed(2)}`} />
+            <Kpi styles={styles} label="Clientes" value={String(kpis.new_clients ?? 0)} />
           </View>
         )}
 
@@ -72,7 +76,7 @@ export default function ReportsScreen() {
   );
 }
 
-function Kpi({ label, value }: { label: string; value: string }) {
+function Kpi({ label, value, styles }: { label: string; value: string; styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={styles.kpiCard}>
       <ThemedText style={styles.kpiLabel}>{label}</ThemedText>
@@ -81,23 +85,24 @@ function Kpi({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
+function createStyles(palette: typeof Colors.light) {
+  return StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 20, paddingBottom: 30, gap: 14 },
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
   },
-  title: { color: '#fff', fontWeight: '900', fontSize: 30 },
-  subtitle: { marginTop: 8, color: Brand.muted, lineHeight: 22 },
+  title: { color: palette.text, fontWeight: '900', fontSize: 30 },
+  subtitle: { marginTop: 8, color: palette.muted, lineHeight: 22 },
   loader: {
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
     alignItems: 'center',
   },
@@ -106,31 +111,32 @@ const styles = StyleSheet.create({
     width: '48%',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 12,
     gap: 4,
   },
-  kpiLabel: { color: Brand.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
-  kpiValue: { color: '#fff', fontWeight: '900', fontSize: 20 },
+  kpiLabel: { color: palette.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
+  kpiValue: { color: palette.text, fontWeight: '900', fontSize: 20 },
   notice: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: 'rgba(212,175,55,0.08)',
+    borderColor: palette.goldSoftBorder,
+    backgroundColor: palette.goldSoftBackground,
     padding: 14,
     gap: 4,
   },
-  noticeTitle: { color: Brand.gold, textTransform: 'uppercase', fontWeight: '900', fontSize: 11 },
-  noticeCopy: { color: '#f1f1f1', lineHeight: 20 },
+  noticeTitle: { color: palette.tint, textTransform: 'uppercase', fontWeight: '900', fontSize: 11 },
+  noticeCopy: { color: palette.text, lineHeight: 20 },
   refreshButton: {
     alignSelf: 'flex-start',
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  refreshText: { color: '#fff', textTransform: 'uppercase', fontWeight: '800', fontSize: 11 },
-});
+  refreshText: { color: palette.text, textTransform: 'uppercase', fontWeight: '800', fontSize: 11 },
+  });
+}

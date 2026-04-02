@@ -4,7 +4,8 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, Sc
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, ApiError } from '@/lib/api';
 import { useRouter } from 'expo-router';
 
@@ -18,6 +19,8 @@ type ProfileForm = {
 
 export default function ProfileScreen() {
   const { token, user, refreshSession } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<ProfileForm>({
@@ -129,20 +132,20 @@ export default function ProfileScreen() {
   }, [token, router]);
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.hero}>
-            <ThemedText type="title" style={styles.title}>
+          <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText type="title" style={[styles.title, { color: palette.text }]}>
               Mi perfil
             </ThemedText>
-            <ThemedText style={styles.subtitle}>
+            <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
               Actualiza tu información personal y contraseña.
             </ThemedText>
           </View>
 
-          <View style={styles.card}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
+          <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
               Información básica
             </ThemedText>
 
@@ -153,7 +156,7 @@ export default function ProfileScreen() {
                 onChangeText={(value) => setForm((prev) => ({ ...prev, name: value }))}
                 placeholder="Tu nombre"
                 placeholderTextColor="#7f7f7f"
-                style={styles.input}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
                 autoCapitalize="words"
               />
             </View>
@@ -165,18 +168,18 @@ export default function ProfileScreen() {
                 onChangeText={(value) => setForm((prev) => ({ ...prev, email: value }))}
                 placeholder="tu@email.com"
                 placeholderTextColor="#7f7f7f"
-                style={styles.input}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
             </View>
           </View>
 
-          <View style={styles.card}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
+          <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
               Cambiar contraseña
             </ThemedText>
-            <ThemedText style={styles.helper}>
+            <ThemedText style={[styles.helper, { color: palette.muted }]}>
               Deja estos campos vacíos si no deseas cambiar tu contraseña.
             </ThemedText>
 
@@ -187,7 +190,7 @@ export default function ProfileScreen() {
                 onChangeText={(value) => setForm((prev) => ({ ...prev, current_password: value }))}
                 placeholder="••••••••"
                 placeholderTextColor="#7f7f7f"
-                style={styles.input}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
                 secureTextEntry
               />
             </View>
@@ -199,7 +202,7 @@ export default function ProfileScreen() {
                 onChangeText={(value) => setForm((prev) => ({ ...prev, password: value }))}
                 placeholder="••••••••"
                 placeholderTextColor="#7f7f7f"
-                style={styles.input}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
                 secureTextEntry
               />
             </View>
@@ -211,25 +214,25 @@ export default function ProfileScreen() {
                 onChangeText={(value) => setForm((prev) => ({ ...prev, password_confirmation: value }))}
                 placeholder="••••••••"
                 placeholderTextColor="#7f7f7f"
-                style={styles.input}
+                style={[styles.input, { borderColor: palette.border, backgroundColor: palette.accent, color: palette.text }]}
                 secureTextEntry
               />
             </View>
           </View>
 
-          <Pressable onPress={handleUpdateProfile} style={styles.saveButton} disabled={loading}>
+          <Pressable onPress={handleUpdateProfile} style={[styles.saveButton, { backgroundColor: palette.tint }]} disabled={loading}>
             {loading ? (
-              <ActivityIndicator color="#000" />
+              <ActivityIndicator color={palette.background} />
             ) : (
-              <ThemedText style={styles.saveButtonText}>Guardar cambios</ThemedText>
+              <ThemedText style={[styles.saveButtonText, { color: palette.background }]}>Guardar cambios</ThemedText>
             )}
           </Pressable>
 
-          <View style={styles.dangerZone}>
+          <View style={[styles.dangerZone, { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.05)' }]}>
             <ThemedText type="subtitle" style={styles.dangerTitle}>
               Zona de peligro
             </ThemedText>
-            <ThemedText style={styles.dangerCopy}>
+            <ThemedText style={[styles.dangerCopy, { color: palette.muted }]}>
               Eliminar tu cuenta es permanente y no se puede deshacer.
             </ThemedText>
             <Pressable onPress={handleDeleteAccount} style={styles.deleteButton} disabled={loading}>

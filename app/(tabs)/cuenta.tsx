@@ -5,13 +5,14 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
 import { useThemeMode } from '@/contexts/theme-context';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
 import { api, ApiError, type AppointmentRecord } from '@/lib/api';
 import { useRouter } from 'expo-router';
 
 export default function AccountScreen() {
   const { token, user, signOut, refreshSession } = useAuth();
   const { mode, cycleMode } = useThemeMode();
+  const palette = Colors[mode === 'system' ? 'dark' : mode];
   const router = useRouter();
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,26 +90,26 @@ export default function AccountScreen() {
   );
 
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <ThemedText type="title" style={styles.title}>
+        <View style={[styles.hero, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <ThemedText type="title" style={[styles.title, { color: palette.text }]}>
             Mi cuenta
           </ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: palette.muted }]}>
             La sesión móvil usa el token emitido por Laravel y se sincroniza con el backend.
           </ThemedText>
         </View>
 
-        <View style={styles.card}>
-          <ThemedText type="defaultSemiBold" style={styles.name}>
+        <View style={[styles.card, { borderColor: palette.border, backgroundColor: palette.card }]}>
+          <ThemedText type="defaultSemiBold" style={[styles.name, { color: palette.text }]}>
             {user?.name ?? 'Usuario'}
           </ThemedText>
-          <ThemedText style={styles.meta}>{user?.email ?? ''}</ThemedText>
-          <ThemedText style={styles.meta}>{user?.roles?.join(' · ') ?? 'Sin rol'}</ThemedText>
+          <ThemedText style={[styles.meta, { color: palette.muted }]}>{user?.email ?? ''}</ThemedText>
+          <ThemedText style={[styles.meta, { color: palette.muted }]}>{user?.roles?.join(' · ') ?? 'Sin rol'}</ThemedText>
 
           <View style={styles.actions}>
-            <Pressable onPress={cycleMode} style={styles.secondaryButton}>
+            <Pressable onPress={cycleMode} style={[styles.secondaryButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
               <ThemedText style={styles.secondaryButtonText}>Tema: {mode}</ThemedText>
             </Pressable>
             <Pressable onPress={() => router.push('/perfil')} style={styles.secondaryButton}>
@@ -174,7 +175,7 @@ export default function AccountScreen() {
                 <ThemedText style={styles.secondaryButtonText}>Pagos</ThemedText>
               </Pressable>
             )}
-            <Pressable onPress={refreshSession} style={styles.secondaryButton}>
+            <Pressable onPress={refreshSession} style={[styles.secondaryButton, { borderColor: palette.border, backgroundColor: palette.accent }]}>
               <ThemedText style={styles.secondaryButtonText}>Sincronizar</ThemedText>
             </Pressable>
             <Pressable onPress={signOut} style={styles.logoutButton}>
@@ -183,9 +184,9 @@ export default function AccountScreen() {
           </View>
         </View>
 
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { borderColor: palette.border, backgroundColor: palette.card }]}>
           <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
+            <ThemedText type="subtitle" style={[styles.sectionTitle, { color: palette.text }]}>
               Mis citas
             </ThemedText>
             <Pressable onPress={loadAppointments}>
@@ -194,7 +195,7 @@ export default function AccountScreen() {
           </View>
 
           {loading ? (
-            <View style={styles.loader}>
+            <View style={[styles.loader, { borderColor: palette.border, backgroundColor: palette.card }]}>
               <ActivityIndicator color={Brand.gold} />
             </View>
           ) : appointments.length ? (
@@ -209,16 +210,16 @@ export default function AccountScreen() {
                 <Pressable
                   key={String(appointment.id)}
                   onPress={() => router.push({ pathname: '/appointments/[id]', params: { id: String(appointment.id) } })}
-                  style={styles.listItem}>
+                  style={[styles.listItem, { borderColor: palette.border, backgroundColor: palette.accent }]}>
                   <View style={styles.listItemHeader}>
-                    <ThemedText type="defaultSemiBold" style={styles.listTitle}>
+                    <ThemedText type="defaultSemiBold" style={[styles.listTitle, { color: palette.text }]}>
                       {String(appointment.service?.nombre ?? 'Servicio')}
                     </ThemedText>
                     <ThemedText style={[styles.status, getStatusStyle(appointment.estado)]}>
                       {String(appointment.estado ?? '')}
                     </ThemedText>
                   </View>
-                  <ThemedText style={styles.listMeta}>
+                  <ThemedText style={[styles.listMeta, { color: palette.muted }]}>
                     {String(appointment.fecha ?? '')} · {String(appointment.hora_inicio ?? '')}
                   </ThemedText>
                   {canCancel && (
@@ -243,7 +244,7 @@ export default function AccountScreen() {
               );
             })
           ) : (
-            <ThemedText style={styles.empty}>Aún no tienes citas registradas.</ThemedText>
+            <ThemedText style={[styles.empty, { color: palette.muted }]}>Aún no tienes citas registradas.</ThemedText>
           )}
         </View>
       </ScrollView>

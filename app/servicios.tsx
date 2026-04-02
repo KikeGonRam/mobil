@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, type ServiceRecord } from '@/lib/api';
 
 const money = new Intl.NumberFormat('es-MX', {
@@ -12,6 +13,9 @@ const money = new Intl.NumberFormat('es-MX', {
 });
 
 export default function ServicesScreen() {
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const [services, setServices] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,9 +47,9 @@ export default function ServicesScreen() {
         </View>
 
         <View style={styles.summaryRow}>
-          <SummaryCard label="Servicios" value={String(services.length)} />
-          <SummaryCard label="Categorias" value={String(new Set(services.map((service) => service.categoria ?? 'General')).size)} accent />
-          <SummaryCard label="Precio base" value={services[0]?.precio ? money.format(Number(services[0].precio)) : '$0.00'} />
+          <SummaryCard styles={styles} label="Servicios" value={String(services.length)} />
+          <SummaryCard styles={styles} label="Categorias" value={String(new Set(services.map((service) => service.categoria ?? 'General')).size)} accent />
+          <SummaryCard styles={styles} label="Precio base" value={services[0]?.precio ? money.format(Number(services[0].precio)) : '$0.00'} />
         </View>
 
         <View style={styles.sectionCard}>
@@ -58,7 +62,7 @@ export default function ServicesScreen() {
 
           {loading ? (
             <View style={styles.loader}>
-              <ActivityIndicator color={Brand.gold} />
+              <ActivityIndicator color={palette.tint} />
               <ThemedText style={styles.loaderText}>Cargando servicios...</ThemedText>
             </View>
           ) : error ? (
@@ -83,7 +87,7 @@ export default function ServicesScreen() {
   );
 }
 
-function SummaryCard({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function SummaryCard({ label, value, accent = false, styles }: { label: string; value: string; accent?: boolean; styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={[styles.summaryCard, accent ? styles.summaryCardAccent : null]}>
       <ThemedText style={styles.summaryLabel}>{label}</ThemedText>
@@ -92,26 +96,27 @@ function SummaryCard({ label, value, accent = false }: { label: string; value: s
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Brand.bgMain },
+function createStyles(palette: typeof Colors.light) {
+  return StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 20, paddingBottom: 32, gap: 14 },
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
   },
-  title: { color: '#fff', fontSize: 28, lineHeight: 32, fontWeight: '900' },
-  subtitle: { marginTop: 8, color: Brand.muted, lineHeight: 22 },
+  title: { color: palette.text, fontSize: 28, lineHeight: 32, fontWeight: '900' },
+  subtitle: { marginTop: 8, color: palette.muted, lineHeight: 22 },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   summaryCard: {
     width: '31%',
     minWidth: 96,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 12,
     gap: 4,
   },
@@ -119,44 +124,45 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212,175,55,0.3)',
     backgroundColor: 'rgba(212,175,55,0.08)',
   },
-  summaryLabel: { color: Brand.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
-  summaryValue: { color: '#fff', fontSize: 20, fontWeight: '900' },
-  summaryValueAccent: { color: Brand.gold },
+  summaryLabel: { color: palette.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
+  summaryValue: { color: palette.text, fontSize: 20, fontWeight: '900' },
+  summaryValueAccent: { color: palette.tint },
   sectionCard: {
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 16,
     gap: 12,
   },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { color: '#fff', textTransform: 'uppercase', letterSpacing: 1.5 },
-  refresh: { color: Brand.gold, textTransform: 'uppercase', fontSize: 12, fontWeight: '800' },
+  sectionTitle: { color: palette.text, textTransform: 'uppercase', letterSpacing: 1.5 },
+  refresh: { color: palette.tint, textTransform: 'uppercase', fontSize: 12, fontWeight: '800' },
   serviceCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
     padding: 14,
     gap: 6,
   },
   serviceHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' },
   serviceTitleWrap: { flex: 1 },
-  serviceTitle: { color: '#fff' },
-  serviceMeta: { color: Brand.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
-  servicePrice: { color: Brand.gold, fontWeight: '900' },
-  serviceCopy: { color: '#e8e8e8', lineHeight: 20 },
+  serviceTitle: { color: palette.text },
+  serviceMeta: { color: palette.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
+  servicePrice: { color: palette.tint, fontWeight: '900' },
+  serviceCopy: { color: palette.text, lineHeight: 20 },
   loader: {
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
     alignItems: 'center',
     gap: 10,
   },
-  loaderText: { color: Brand.muted },
+  loaderText: { color: palette.muted },
   error: { color: '#fca5a5', lineHeight: 22 },
-  empty: { color: Brand.muted, fontStyle: 'italic' },
-});
+  empty: { color: palette.muted, fontStyle: 'italic' },
+  });
+}

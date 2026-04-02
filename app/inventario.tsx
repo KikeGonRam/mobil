@@ -4,12 +4,16 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/auth-context';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { api, type InventoryMovementRecord, type InventoryProductRecord } from '@/lib/api';
 import { useRouter } from 'expo-router';
 
 export default function InventoryScreen() {
   const { user, token } = useAuth();
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const router = useRouter();
   const [products, setProducts] = useState<InventoryProductRecord[]>([]);
   const [movements, setMovements] = useState<InventoryMovementRecord[]>([]);
@@ -67,14 +71,14 @@ export default function InventoryScreen() {
         </View>
 
         <View style={styles.summaryRow}>
-          <SummaryCard label="Productos" value={String(products.length)} />
-          <SummaryCard label="Bajo stock" value={String(lowStockCount)} accent />
-          <SummaryCard label="Movimientos" value={String(movements.length)} />
+          <SummaryCard styles={styles} label="Productos" value={String(products.length)} />
+          <SummaryCard styles={styles} label="Bajo stock" value={String(lowStockCount)} accent />
+          <SummaryCard styles={styles} label="Movimientos" value={String(movements.length)} />
         </View>
 
         {loading ? (
           <View style={styles.loader}>
-            <ActivityIndicator color={Brand.gold} />
+            <ActivityIndicator color={palette.tint} />
             <ThemedText style={styles.loaderText}>Cargando inventario...</ThemedText>
           </View>
         ) : (
@@ -135,7 +139,7 @@ export default function InventoryScreen() {
   );
 }
 
-function SummaryCard({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function SummaryCard({ label, value, accent = false, styles }: { label: string; value: string; accent?: boolean; styles: ReturnType<typeof createStyles> }) {
   return (
     <View style={[styles.summaryCard, accent ? styles.summaryCardAccent : null]}>
       <ThemedText style={styles.summaryLabel}>{label}</ThemedText>
@@ -144,26 +148,27 @@ function SummaryCard({ label, value, accent = false }: { label: string; value: s
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Brand.bgMain },
+function createStyles(palette: typeof Colors.light) {
+  return StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 20, paddingBottom: 32, gap: 14 },
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
   },
-  title: { color: '#fff', fontSize: 28, lineHeight: 32, fontWeight: '900' },
-  subtitle: { marginTop: 8, color: Brand.muted, lineHeight: 22 },
+  title: { color: palette.text, fontSize: 28, lineHeight: 32, fontWeight: '900' },
+  subtitle: { marginTop: 8, color: palette.muted, lineHeight: 22 },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   summaryCard: {
     width: '31%',
     minWidth: 96,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 12,
     gap: 4,
   },
@@ -171,94 +176,95 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212,175,55,0.3)',
     backgroundColor: 'rgba(212,175,55,0.08)',
   },
-  summaryLabel: { color: Brand.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
-  summaryValue: { color: '#fff', fontSize: 20, fontWeight: '900' },
-  summaryValueAccent: { color: Brand.gold },
+  summaryLabel: { color: palette.muted, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 },
+  summaryValue: { color: palette.text, fontSize: 20, fontWeight: '900' },
+  summaryValueAccent: { color: palette.tint },
   loader: {
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
     alignItems: 'center',
     gap: 10,
   },
-  loaderText: { color: Brand.muted },
+  loaderText: { color: palette.muted },
   sectionCard: {
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 16,
     gap: 12,
   },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { color: '#fff', textTransform: 'uppercase', letterSpacing: 1.5 },
-  refresh: { color: Brand.gold, textTransform: 'uppercase', fontSize: 12, fontWeight: '800' },
+  sectionTitle: { color: palette.text, textTransform: 'uppercase', letterSpacing: 1.5 },
+  refresh: { color: palette.tint, textTransform: 'uppercase', fontSize: 12, fontWeight: '800' },
   productCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
     padding: 14,
     gap: 6,
   },
   productHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' },
   productNameWrap: { flex: 1 },
-  productName: { color: '#fff' },
-  productMeta: { color: Brand.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
-  productPrice: { color: Brand.gold, fontWeight: '800' },
-  productCopy: { color: '#e8e8e8', lineHeight: 20 },
+  productName: { color: palette.text },
+  productMeta: { color: palette.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
+  productPrice: { color: palette.tint, fontWeight: '800' },
+  productCopy: { color: palette.text, lineHeight: 20 },
   stockBadge: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: Brand.line,
+    borderColor: palette.border,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: palette.card,
   },
   stockBadgeLow: {
     borderColor: 'rgba(248,113,113,0.35)',
     backgroundColor: 'rgba(248,113,113,0.08)',
   },
-  stockBadgeText: { color: '#fff', fontWeight: '800', fontSize: 10 },
+  stockBadgeText: { color: palette.text, fontWeight: '800', fontSize: 10 },
   stockBadgeTextLow: { color: '#fca5a5' },
   movementCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
     padding: 14,
     gap: 4,
   },
   movementHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  movementTitle: { color: '#fff' },
+  movementTitle: { color: palette.text },
   movementType: {
-    color: Brand.gold,
+    color: palette.tint,
     textTransform: 'uppercase',
     fontWeight: '800',
     fontSize: 10,
     letterSpacing: 1,
   },
-  movementMeta: { color: Brand.muted, fontSize: 11 },
-  movementCopy: { color: '#e9e9e9' },
-  empty: { color: Brand.muted, fontStyle: 'italic' },
+  movementMeta: { color: palette.muted, fontSize: 11 },
+  movementCopy: { color: palette.text },
+  empty: { color: palette.muted, fontStyle: 'italic' },
   restricted: {
     flex: 1,
     padding: 24,
     justifyContent: 'center',
     gap: 12,
   },
-  restrictedTitle: { color: '#fff', fontSize: 28 },
-  restrictedCopy: { color: Brand.muted, lineHeight: 22 },
+  restrictedTitle: { color: palette.text, fontSize: 28 },
+  restrictedCopy: { color: palette.muted, lineHeight: 22 },
   backButton: {
     alignSelf: 'flex-start',
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  backButtonText: { color: '#fff', textTransform: 'uppercase', fontWeight: '800', fontSize: 11 },
-});
+  backButtonText: { color: palette.text, textTransform: 'uppercase', fontWeight: '800', fontSize: 11 },
+  });
+}

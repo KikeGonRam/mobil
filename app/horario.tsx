@@ -3,12 +3,16 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Brand } from '@/constants/theme';
+import { Brand, Colors } from '@/constants/theme';
+import { useThemeMode } from '@/contexts/theme-context';
 import { useRouter } from 'expo-router';
 
 const WEEK_DAYS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
 export default function ScheduleScreen() {
+  const { resolvedMode } = useThemeMode();
+  const palette = Colors[resolvedMode];
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const router = useRouter();
 
   const scheduleRows = useMemo(
@@ -71,10 +75,11 @@ export default function ScheduleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(palette: typeof Colors.light) {
+  return StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Brand.bgMain,
+    backgroundColor: palette.background,
   },
   content: {
     padding: 20,
@@ -84,34 +89,34 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 20,
   },
   title: {
-    color: '#fff',
+    color: palette.text,
     fontSize: 28,
     lineHeight: 32,
     fontWeight: '900',
   },
   subtitle: {
     marginTop: 8,
-    color: Brand.muted,
+    color: palette.muted,
     lineHeight: 22,
   },
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     padding: 12,
     gap: 8,
   },
   row: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgAccent,
+    borderColor: palette.border,
+    backgroundColor: palette.accent,
     paddingHorizontal: 12,
     paddingVertical: 10,
     flexDirection: 'row',
@@ -119,11 +124,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dayName: {
-    color: '#fff',
+    color: palette.text,
   },
   dayStatus: {
     marginTop: 2,
-    color: Brand.muted,
+    color: palette.muted,
     textTransform: 'uppercase',
     fontSize: 10,
     letterSpacing: 1,
@@ -134,44 +139,45 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   timeText: {
-    color: Brand.gold,
+    color: palette.tint,
     fontWeight: '800',
     fontSize: 13,
   },
   timeDash: {
-    color: Brand.muted,
+    color: palette.muted,
   },
   notice: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: 'rgba(212,175,55,0.08)',
+    borderColor: palette.goldSoftBorder,
+    backgroundColor: palette.goldSoftBackground,
     padding: 14,
     gap: 6,
   },
   noticeTitle: {
-    color: Brand.gold,
+    color: palette.tint,
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '900',
     fontSize: 11,
   },
   noticeCopy: {
-    color: '#f1f1f1',
+    color: palette.text,
     lineHeight: 20,
   },
   backButton: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Brand.line,
-    backgroundColor: Brand.bgCard,
+    borderColor: palette.border,
+    backgroundColor: palette.card,
     alignItems: 'center',
     paddingVertical: 12,
   },
   backButtonText: {
-    color: '#fff',
+    color: palette.text,
     textTransform: 'uppercase',
     fontWeight: '800',
     fontSize: 11,
   },
-});
+  });
+}
