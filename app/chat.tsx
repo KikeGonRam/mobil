@@ -1,6 +1,16 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import Animated, {
+  Easing,
+  FadeInUp,
+  FadeOutDown,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -21,6 +31,8 @@ function makeId() {
 export default function ChatScreen() {
   const router = useRouter();
   const { token } = useAuth();
+  const backdropOpacity = useSharedValue(0);
+  const cardProgress = useSharedValue(0);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: makeId(),
@@ -34,6 +46,23 @@ export default function ChatScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const canSend = useMemo(() => input.trim().length > 0 && !sending, [input, sending]);
+
+  useEffect(() => {
+    backdropOpacity.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.quad) });
+    cardProgress.value = withSpring(1, { damping: 16, stiffness: 160, mass: 0.9 });
+  }, [backdropOpacity, cardProgress]);
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
+  }));
+
+  const modalStyle = useAnimatedStyle(() => ({
+    opacity: cardProgress.value,
+    transform: [
+      { translateY: 18 * (1 - cardProgress.value) },
+      { scale: 0.98 + cardProgress.value * 0.02 },
+    ],
+  }));
 
   const loadHistory = useCallback(async () => {
     if (!token) {
@@ -137,8 +166,9 @@ export default function ChatScreen() {
   return (
     <ThemedView style={styles.backdrop}>
       <Stack.Screen options={{ title: 'Asistente', headerShown: false }} />
+      <Animated.View pointerEvents="none" style={[styles.backdropOverlay, backdropStyle]} />
       <Pressable style={styles.backdropPressable} onPress={() => router.back()}>
-        <Pressable style={styles.modalCard} onPress={(event) => event.stopPropagation()}>
+        <Animated.View style={[styles.modalCard, modalStyle]}>
           <View style={styles.headerRow}>
             <View style={styles.headerCopy}>
               <ThemedText type="title" style={styles.title}>Asistente</ThemedText>
@@ -160,7 +190,11 @@ export default function ChatScreen() {
 
           {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
 
-          <ScrollView contentContainerStyle={styles.messages}>
+          <ScrollView
+            style={styles.messagesScroll}
+            contentContainerStyle={styles.messages}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled">
             {messages.map((message) => (
               <View
                 key={message.id}
@@ -195,7 +229,7 @@ export default function ChatScreen() {
               <ThemedText style={styles.sendButtonText}>Enviar</ThemedText>
             </Pressable>
           </View>
-        </Pressable>
+        </Animated.View>
       </Pressable>
     </ThemedView>
   );
@@ -236,30 +270,41 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.58)',
-    justifyContent: 'center',
-    padding: 16,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 22,
+  },
+  backdropOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.24)',
   },
   backdropPressable: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
   },
   modalCard: {
+    width: '100%',
+    alignSelf: 'stretch',
     borderRadius: 24,
     borderWidth: 1,
     borderColor: Brand.line,
     backgroundColor: Brand.bgMain,
-    padding: 14,
-    gap: 10,
-    maxHeight: '88%',
+    padding: 16,
+    gap: 12,
+    maxHeight: '82%',
+    minHeight: 360,
+    marginTop: 'auto',
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 14,
+    shadowOpacity: 0.42,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 18,
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
   },
@@ -276,12 +321,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#fff',
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '900',
   },
   subtitle: {
     color: Brand.muted,
     lineHeight: 20,
+    marginTop: 4,
   },
   closeButton: {
     borderRadius: 999,
@@ -300,6 +346,11 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     gap: 8,
+    flexWrap: 'wrap',
+  },
+  actionsHint: {
+    color: Brand.muted,
+    fontSize: 11,
   },
   secondaryButton: {
     borderRadius: 999,
@@ -322,6 +373,13 @@ const styles = StyleSheet.create({
   messages: {
     gap: 8,
     paddingVertical: 8,
+    paddingRight: 2,
+    paddingBottom: 4,
+  },
+  messagesScroll: {
+    flexGrow: 1,
+    minHeight: 200,
+    maxHeight: 360,
   },
   bubble: {
     maxWidth: '88%',
@@ -358,6 +416,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     alignItems: 'flex-end',
+    paddingTop: 2,
   },
   input: {
     flex: 1,

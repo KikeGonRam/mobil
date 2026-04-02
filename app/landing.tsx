@@ -160,6 +160,7 @@ export default function LandingScreen() {
       {/* FAB - Asistente Chatbot */}
       <Animated.View style={[styles.fabContainer, animatedFabStyle]}>
         <Pressable 
+          onPress={() => router.push('/chat')}
           onPressIn={() => (fabScale.value = withSpring(0.9))}
           onPressOut={() => (fabScale.value = withSpring(1))}
           style={styles.fab}>
