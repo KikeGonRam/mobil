@@ -1,112 +1,265 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { useAuth } from '@/contexts/auth-context';
+import { Brand } from '@/constants/theme';
+import { api } from '@/lib/api';
 
-export default function TabTwoScreen() {
+type ServiceItem = {
+  id: number;
+  nombre: string;
+  categoria?: string;
+  precio?: number;
+  duracion_min?: number;
+  descripcion?: string;
+};
+
+type BarberItem = {
+  id: number;
+  name: string;
+  especialidades?: string;
+  descripcion?: string;
+};
+
+export default function ExploreScreen() {
+  const { token } = useAuth();
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [barbers, setBarbers] = useState<BarberItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void loadCatalog();
+  }, []);
+
+  async function loadCatalog() {
+    setLoading(true);
+
+    try {
+      const [servicesResponse, barbersResponse] = await Promise.all([
+        api.services(),
+        api.barbers(),
+      ]);
+
+      setServices(servicesResponse.data as ServiceItem[]);
+      setBarbers(barbersResponse.data as BarberItem[]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
+    <ThemedView style={styles.screen}>
+      <FlatList
+        data={services}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.content}
+        ListHeaderComponent={
+          <View style={styles.hero}>
+            <ThemedText type="title" style={styles.title}>
+              Catálogo
             </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+            <ThemedText style={styles.subtitle}>
+              Los servicios y barberos se consumen directo del backend de Laravel.
+            </ThemedText>
+
+            <View style={styles.topRow}>
+              <StatPill label="Servicios" value={services.length} />
+              <StatPill label="Barberos" value={barbers.length} />
+              <StatPill label="Token" value={token ? 'Activo' : 'Off'} accent={!!token} />
+            </View>
+          </View>
+        }
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loader}>
+              <ActivityIndicator color={Brand.gold} />
+              <ThemedText style={styles.loaderText}>Cargando catálogo...</ThemedText>
+            </View>
+          ) : (
+            <ThemedText style={styles.empty}>No hay servicios publicados.</ThemedText>
+          )
+        }
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
+                {item.nombre}
+              </ThemedText>
+              <ThemedText style={styles.price}>${Number(item.precio ?? 0).toFixed(2)}</ThemedText>
+            </View>
+            <ThemedText style={styles.cardMeta}>
+              {item.categoria ?? 'general'} · {item.duracion_min ?? 0} min
+            </ThemedText>
+            {item.descripcion ? <ThemedText style={styles.cardCopy}>{item.descripcion}</ThemedText> : null}
+          </View>
+        )}
+        ListFooterComponent={
+          <View style={styles.barberSection}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              Barberos
+            </ThemedText>
+            {barbers.map((barber) => (
+              <View key={String(barber.id)} style={styles.card}>
+                <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
+                  {barber.name}
+                </ThemedText>
+                <ThemedText style={styles.cardMeta}>{barber.especialidades ?? 'Sin especialidades'}</ThemedText>
+                {barber.descripcion ? <ThemedText style={styles.cardCopy}>{barber.descripcion}</ThemedText> : null}
+              </View>
+            ))}
+            <Pressable onPress={loadCatalog} style={styles.refreshButton}>
+              <ThemedText style={styles.refreshText}>Actualizar catálogo</ThemedText>
+            </Pressable>
+          </View>
+        }
+        refreshing={loading}
+        onRefresh={loadCatalog}
+      />
+    </ThemedView>
+  );
+}
+
+function StatPill({ label, value, accent = false }: { label: string; value: number | string; accent?: boolean }) {
+  return (
+    <View style={[styles.pill, accent ? styles.pillAccent : null]}>
+      <ThemedText style={styles.pillLabel}>{label}</ThemedText>
+      <ThemedText style={[styles.pillValue, accent ? styles.pillValueAccent : null]}>{value}</ThemedText>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  screen: {
+    flex: 1,
   },
-  titleContainer: {
+  content: {
+    padding: 20,
+    paddingBottom: 32,
+    gap: 14,
+  },
+  hero: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: Brand.line,
+    backgroundColor: Brand.bgCard,
+    padding: 20,
+    gap: 12,
+  },
+  title: {
+    color: '#fff',
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: '900',
+  },
+  subtitle: {
+    color: Brand.muted,
+    lineHeight: 22,
+  },
+  topRow: {
     flexDirection: 'row',
-    gap: 8,
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  pill: {
+    minWidth: 96,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Brand.line,
+    backgroundColor: Brand.bgAccent,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  pillAccent: {
+    borderColor: 'rgba(212,175,55,0.3)',
+    backgroundColor: 'rgba(212,175,55,0.08)',
+  },
+  pillLabel: {
+    color: Brand.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontSize: 10,
+  },
+  pillValue: {
+    color: '#fff',
+    marginTop: 4,
+    fontWeight: '900',
+    fontSize: 18,
+  },
+  pillValueAccent: {
+    color: Brand.gold,
+  },
+  loader: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Brand.line,
+    backgroundColor: Brand.bgCard,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  loaderText: {
+    color: Brand.muted,
+  },
+  empty: {
+    color: Brand.muted,
+    fontStyle: 'italic',
+  },
+  card: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Brand.line,
+    backgroundColor: Brand.bgCard,
+    padding: 16,
+    gap: 6,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  cardTitle: {
+    color: '#fff',
+    flex: 1,
+  },
+  price: {
+    color: Brand.gold,
+    fontWeight: '900',
+  },
+  cardMeta: {
+    color: Brand.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontSize: 11,
+  },
+  cardCopy: {
+    color: '#d7d7d7',
+    lineHeight: 20,
+  },
+  barberSection: {
+    gap: 12,
+    marginTop: 6,
+  },
+  sectionTitle: {
+    color: '#fff',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+  },
+  refreshButton: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.25)',
+    backgroundColor: 'rgba(212,175,55,0.08)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  refreshText: {
+    color: Brand.gold,
+    textTransform: 'uppercase',
+    fontSize: 12,
+    fontWeight: '800',
   },
 });

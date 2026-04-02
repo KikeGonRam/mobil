@@ -1,5 +1,4 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
-
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 export type ThemedTextProps = TextProps & {
@@ -8,6 +7,9 @@ export type ThemedTextProps = TextProps & {
   type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
 };
 
+/**
+ * Standard Text component that automatically responds to theme changes.
+ */
 export function ThemedText({
   style,
   lightColor,
@@ -15,6 +17,7 @@ export function ThemedText({
   type = 'default',
   ...rest
 }: ThemedTextProps) {
+  // Always fetch text color from our theme constants
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
   return (
@@ -41,20 +44,20 @@ const styles = StyleSheet.create({
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 32,
+    fontWeight: '900',
+    lineHeight: 36,
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '800',
   },
   link: {
     lineHeight: 30,
     fontSize: 16,
-    color: '#0a7ea4',
+    color: '#d4af37', // Gold for links
   },
 });
